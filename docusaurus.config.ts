@@ -84,7 +84,27 @@ const config: Config = {
       ignorePatterns: ["/tags/**"],
     },
   } satisfies Preset.ThemeConfig,
-  plugins: [],
+  plugins: [
+    function excludeNodeModulesMdx() {
+      return {
+        name: "exclude-node-modules-mdx",
+        configureWebpack() {
+          return {
+            module: {
+              rules: [
+                {
+                  test: /\.(?:md|mdx)$/,
+                  include: /node_modules/,
+                  use: [],
+                  type: "javascript/auto",
+                },
+              ],
+            },
+          };
+        },
+      };
+    },
+  ],
 };
 
 export default config;
