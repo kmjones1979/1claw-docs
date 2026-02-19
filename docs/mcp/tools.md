@@ -237,8 +237,8 @@ Grant a user or agent access to a vault by creating an access policy.
 | `vault_id` | string | Yes | UUID of the vault |
 | `principal_type` | string | Yes | `user` or `agent` |
 | `principal_id` | string | Yes | UUID of the user or agent |
-| `permissions` | string[] | Yes | Array of permissions: `read`, `write`, `delete` |
-| `secret_path_pattern` | string | No | Glob pattern to restrict access (e.g. `api-keys/*`) |
+| `permissions` | string[] | No | Array of permissions: `read`, `write`, `delete` (default: `["read"]`) |
+| `secret_path_pattern` | string | No | Glob pattern to restrict access (default: `**` — all secrets) |
 
 ### Example
 
@@ -261,8 +261,8 @@ Share a secret with someone via email. The recipient doesn't need a 1Claw accoun
 |------|------|----------|-------------|
 | `secret_id` | string | Yes | UUID of the secret to share |
 | `email` | string | Yes | Recipient's email address |
-| `expires_at` | string | No | ISO 8601 expiry datetime (default: 7 days) |
-| `max_access_count` | number | No | Maximum number of times the share can be accessed (default: 1) |
+| `expires_at` | string | Yes | ISO 8601 expiry datetime (e.g. `2026-03-01T00:00:00Z`) |
+| `max_access_count` | number | No | Maximum number of times the share can be accessed (default: 5) |
 
 ### Example
 

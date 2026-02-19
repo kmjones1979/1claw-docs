@@ -6,13 +6,25 @@ sidebar_position: 3
 
 # Changelog
 
-For detailed release history, see the [1claw repository](https://github.com/1clawAI/1claw) commits.
+For detailed release history, see the [1clawAI GitHub](https://github.com/1clawAI) repositories.
 
 ## API stability
 
 The **/v1** API is stable. Breaking changes would be accompanied by a new version prefix or clear deprecation notices. New optional fields or endpoints are added in a backward-compatible way.
 
 ## 2026-02 (latest)
+
+### Agent integration guide
+
+- **New:** Agent detail page in the dashboard now includes a tabbed integration guide with copy-paste code snippets for TypeScript SDK, Python, curl, and MCP configuration.
+
+### PolyForm Noncommercial License
+
+- All repositories now include the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0).
+
+### Organization migration
+
+- All repositories moved to the [1clawAI](https://github.com/1clawAI) GitHub organization.
 
 ### Email notifications
 

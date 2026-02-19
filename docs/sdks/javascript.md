@@ -57,7 +57,7 @@ const client = createClient({
 const client = createClient({
   baseUrl: "https://api.1claw.xyz",
   agentId: "uuid",
-  agentApiKey: "ocv_...",
+  apiKey: "ocv_...",
 });
 
 // 3. Manual auth (signup, email/password)
@@ -73,16 +73,18 @@ All API endpoints are organized into resource modules:
 
 | Module | Methods |
 |--------|---------|
-| `client.auth` | `login()`, `signup()`, `googleAuth()`, `changePassword()` |
+| `client.auth` | `login()`, `signup()`, `agentToken()`, `apiKeyToken()`, `google()`, `changePassword()`, `logout()` |
 | `client.vault` | `create()`, `list()`, `get()`, `delete()` |
-| `client.secrets` | `set()`, `get()`, `list()`, `delete()` |
-| `client.access` | `createPolicy()`, `listPolicies()`, `deletePolicy()`, `grantAgent()` |
-| `client.agents` | `register()`, `list()`, `get()`, `update()`, `deactivate()`, `rotateKey()` |
+| `client.secrets` | `set()`, `get()`, `list()`, `delete()`, `rotate()` |
+| `client.access` | `grantHuman()`, `grantAgent()`, `update()`, `revoke()`, `listGrants()` |
+| `client.agents` | `create()`, `list()`, `get()`, `update()`, `delete()`, `rotateKey()` |
 | `client.sharing` | `create()`, `access()`, `revoke()` |
+| `client.approvals` | `request()`, `list()`, `approve()`, `deny()`, `check()` |
 | `client.apiKeys` | `create()`, `list()`, `revoke()` |
 | `client.billing` | `usage()`, `history()` |
-| `client.audit` | `events()` |
-| `client.org` | `members()`, `updateRole()`, `removeMember()` |
+| `client.audit` | `query()` |
+| `client.org` | `listMembers()`, `updateMemberRole()`, `removeMember()` |
+| `client.x402` | `getPaymentRequirement()`, `pay()`, `verifyReceipt()`, `withPayment()` |
 
 ## Sharing by email
 

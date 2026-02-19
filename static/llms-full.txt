@@ -1,4 +1,4 @@
-## Audit log (agents)
+## 
 
 ---
 title: Audit log (agents)
@@ -46,7 +46,7 @@ Secret values are never included in audit payloads. See [Audit and compliance](/
 
 ---
 
-## Agent authentication
+## 
 
 ---
 title: Agent authentication
@@ -104,7 +104,7 @@ Never log or expose the API key; treat it like a password.
 
 ---
 
-## Agent API errors
+## 
 
 ---
 title: Agent API errors
@@ -130,7 +130,7 @@ See [Human API errors](/docs/human-api/errors) and [Error codes reference](/docs
 
 ---
 
-## Fetch a secret
+## 
 
 ---
 title: Fetch a secret
@@ -178,7 +178,7 @@ Use the `value` only for the intended operation; do not log or cache it longer t
 
 ---
 
-## List accessible secrets
+## 
 
 ---
 title: List accessible secrets
@@ -222,7 +222,7 @@ Values are **never** returned in list responses. To get a value, call [GET .../s
 
 ---
 
-## Agent API overview
+## 
 
 ---
 title: Agent API overview
@@ -260,7 +260,7 @@ Agents typically **do not** create vaults, register other agents, or manage poli
 
 ---
 
-## HSM architecture
+## 
 
 ---
 title: HSM architecture
@@ -306,7 +306,7 @@ See [Key hierarchy](/docs/security/key-hierarchy) and [Security overview](/docs/
 
 ---
 
-## Human vs Agent API
+## 
 
 ---
 title: Human vs Agent API
@@ -369,7 +369,7 @@ Humans need long-lived sessions or API keys for dashboards and automation; agent
 
 ---
 
-## Secrets model
+## 
 
 ---
 title: Secrets model
@@ -417,7 +417,7 @@ Values are never logged or returned in list/audit responses; only “secret acce
 
 ---
 
-## Trust model
+## 
 
 ---
 title: Trust model
@@ -451,7 +451,7 @@ See [Zero trust](/docs/security/zero-trust) for a longer treatment.
 
 ---
 
-## What is 1claw?
+## 
 
 ---
 title: What is 1claw?
@@ -483,7 +483,7 @@ Humans need to **create** vaults, **store** and **rotate** secrets, **register**
 
 ---
 
-## Audit and compliance
+## 
 
 ---
 title: Audit and compliance
@@ -519,7 +519,7 @@ Use the audit log for compliance reviews, incident response, and access analysis
 
 ---
 
-## Billing & Usage
+## 
 
 ---
 title: Billing & Usage
@@ -629,7 +629,7 @@ If the free tier is exhausted, the MCP server will return a clear error message:
 
 ---
 
-## Deploying Updates
+## 
 
 ---
 title: Deploying Updates
@@ -766,7 +766,62 @@ This is intentional — infrastructure changes should be reviewed before applyin
 
 ---
 
-## Give an agent access
+## 
+
+---
+title: Email Notifications
+description: 1Claw sends transactional emails for important account events via Resend.
+sidebar_position: 9
+---
+
+# Email Notifications
+
+1Claw sends transactional email notifications for important security and account events. Emails are powered by [Resend](https://resend.com) and are sent asynchronously — they never block API responses.
+
+## Notification events
+
+| Event | Recipient | When |
+|-------|-----------|------|
+| **Welcome** | New user | Account created via email/password signup or Google OAuth |
+| **Secret shared** | Share recipient | A secret is shared with them via email (`external_email` share) |
+| **Shared secret accessed** | Share creator | Someone accesses a secret the user shared |
+| **Password changed** | User | Password is successfully changed |
+| **API key created** | User | A new personal API key is created on their account |
+
+## Configuration
+
+Email sending requires a Resend API key. Set these environment variables on the vault server:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `RESEND_API_KEY` | Yes | — | Your Resend API key (`re_...`) |
+| `ONECLAW_EMAIL_FROM` | No | `1Claw <noreply@1claw.xyz>` | Sender address |
+| `ONECLAW_PUBLIC_URL` | No | `https://1claw.xyz` | Base URL for links in emails |
+
+If `RESEND_API_KEY` is not set, email sending is silently skipped and a log message is emitted instead. This is useful for local development.
+
+## Self-hosting
+
+If you're self-hosting 1Claw:
+
+1. Create a free [Resend](https://resend.com) account.
+2. Add and verify your domain in Resend.
+3. Create an API key and set `RESEND_API_KEY` in your environment.
+4. Set `ONECLAW_EMAIL_FROM` to a sender address on your verified domain.
+5. Set `ONECLAW_PUBLIC_URL` to your dashboard URL so email links work correctly.
+
+## Email design
+
+All emails use inline CSS for maximum email client compatibility. They follow a dark theme consistent with the 1Claw brand and include:
+
+- Clear subject lines describing the event
+- Action buttons linking to the dashboard
+- Footer with support contact information
+
+
+---
+
+## 
 
 ---
 title: Give an agent access
@@ -859,7 +914,7 @@ To revoke: delete the policy or deactivate the agent. To rotate: create a new se
 
 ---
 
-## MCP Integration
+## 
 
 ---
 title: MCP integration
@@ -929,9 +984,6 @@ cd packages/mcp && pnpm install && pnpm run build
 | `describe_secret` | Get metadata without the value |
 | `rotate_and_store` | Store a new version of an existing secret |
 | `get_env_bundle` | Fetch and parse a KEY=VALUE env bundle |
-| `create_vault` | Create a new vault (auto-shared with agent's creator) |
-| `list_vaults` | List all vaults the agent has access to |
-| `grant_access` | Share a vault with a user or agent (own vaults only) |
 
 ## Typical agent workflow
 
@@ -959,7 +1011,7 @@ cd packages/mcp && pnpm install && pnpm run build
 
 ---
 
-## Revoking access
+## 
 
 ---
 title: Revoking access
@@ -992,7 +1044,7 @@ Returns a new API key; the old one stops working. Use this to invalidate a leake
 
 ---
 
-## Rotating secrets
+## 
 
 ---
 title: Rotating secrets
@@ -1023,7 +1075,7 @@ To rotate an **agent API key**, use **POST /v1/agents/:agent_id/rotate-key**. Th
 
 ---
 
-## Scoped permissions
+## 
 
 ---
 title: Scoped permissions
@@ -1061,7 +1113,122 @@ secret_path_pattern `api-keys/*`, permissions `["read"]`. The agent cannot write
 
 ---
 
-## Deactivate agent / Rotate key
+## 
+
+---
+title: Sharing Secrets
+description: Share secrets with teammates or external collaborators by email, even if they don't have an account yet.
+sidebar_position: 4
+---
+
+# Sharing Secrets
+
+1Claw supports sharing individual secrets with other users, agents, or external collaborators via email. Shares are time-limited, access-counted, and can be revoked at any time.
+
+## Share types
+
+| `recipient_type` | Description |
+|-------------------|-------------|
+| `user` | Direct share to an existing 1Claw user by ID |
+| `agent` | Direct share to a registered agent by ID |
+| `external_email` | Invite-by-email — the recipient doesn't need an account yet |
+| `anyone_with_link` | Anyone with the share URL can access |
+
+## Create a share
+
+```bash
+curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_type": "external_email",
+    "email": "colleague@example.com",
+    "expires_at": "2026-03-15T00:00:00Z",
+    "max_access_count": 5
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "id": "uuid",
+  "share_url": "https://api.1claw.xyz/v1/share/uuid",
+  "recipient_type": "external_email",
+  "recipient_email": "colleague@example.com",
+  "expires_at": "2026-03-15T00:00:00Z",
+  "max_access_count": 5
+}
+```
+
+## Invite-by-email flow
+
+When you share with `recipient_type: "external_email"`:
+
+1. A share record is created with the recipient's email.
+2. The recipient receives an email notification with a link to sign in.
+3. When the recipient signs up or logs in with that email, all pending shares are **automatically claimed** — they appear in the recipient's account.
+4. The recipient can then access the shared secret through the API or dashboard.
+
+This means agents can share secrets with humans who don't have accounts yet. The human simply signs up with the invited email address and their shares are waiting.
+
+## Access a share
+
+```bash
+curl https://api.1claw.xyz/v1/share/{share_id}
+```
+
+Returns the decrypted secret value if the share is still valid (not expired, under access limit).
+
+## Revoke a share
+
+Only the creator can revoke:
+
+```bash
+curl -X DELETE https://api.1claw.xyz/v1/share/{share_id} \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Using the SDK
+
+```ts
+import { createClient } from "@1claw/sdk";
+
+const client = createClient({ baseUrl: "https://api.1claw.xyz", apiKey: "..." });
+
+// Share by email
+const share = await client.sharing.create(secretId, {
+  recipient_type: "external_email",
+  email: "colleague@example.com",
+  expires_at: "2026-03-15T00:00:00Z",
+  max_access_count: 5,
+});
+
+// Access a share
+const secret = await client.sharing.access(shareId);
+
+// Revoke
+await client.sharing.revoke(shareId);
+```
+
+## Email notifications
+
+When a share is created with `external_email`, the recipient receives an email. The share creator also receives a notification each time the shared secret is accessed.
+
+See [Email Notifications](/docs/guides/email-notifications) for the full list of automated emails.
+
+## Security considerations
+
+- Shares respect the `max_access_count` — once exhausted, the link is dead.
+- Shares expire at `expires_at` — past that datetime, access is denied.
+- Share creators are notified on each access.
+- Revoked shares return 404 immediately.
+- Optional: add a `passphrase` or `ip_allowlist` to the share for additional protection.
+
+
+---
+
+## 
 
 ---
 title: Deactivate agent / Rotate key
@@ -1108,7 +1275,7 @@ curl -X POST "https://api.1claw.xyz/v1/agents/ec7e0226-30f0-4dda-b169-f060a35026
 
 ---
 
-## List agents
+## 
 
 ---
 title: List agents
@@ -1153,7 +1320,7 @@ curl -s "https://api.1claw.xyz/v1/agents" \
 
 ---
 
-## Register an agent
+## 
 
 ---
 title: Register an agent
@@ -1213,7 +1380,7 @@ Store the `api_key` securely; it cannot be retrieved again. Use [Deactivate agen
 
 ---
 
-## Authentication
+## 
 
 ---
 title: Authentication
@@ -1345,7 +1512,7 @@ All error bodies use the standard problem-details format (`type`, `title`, `stat
 
 ---
 
-## Human API errors
+## 
 
 ---
 title: Human API errors
@@ -1395,7 +1562,7 @@ See [Error codes reference](/docs/reference/error-codes) for a full list.
 
 ---
 
-## Create a policy (grant)
+## 
 
 ---
 title: Create a policy (grant)
@@ -1463,7 +1630,7 @@ curl -X POST "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c7
 
 ---
 
-## List policies (grants)
+## 
 
 ---
 title: List policies (grants)
@@ -1513,7 +1680,7 @@ curl -s "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/po
 
 ---
 
-## Revoke a policy (grant)
+## 
 
 ---
 title: Revoke a policy (grant)
@@ -1550,7 +1717,7 @@ curl -X DELETE "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies/897b37da-a265
 
 ---
 
-## Human API overview
+## 
 
 ---
 title: Human API overview
@@ -1581,6 +1748,7 @@ Ways to get an access token:
 
 | Method | Endpoint | Request body |
 |--------|----------|--------------|
+| **Signup** | `POST /v1/auth/signup` | `{ "email", "password", "display_name?" }` |
 | Email + password | `POST /v1/auth/token` | `{ "email", "password" }` |
 | Google OAuth | `POST /v1/auth/google` | `{ "id_token" }` |
 | Personal API key | `POST /v1/auth/api-key-token` | `{ "api_key" }` (e.g. `1ck_...`) |
@@ -1595,7 +1763,7 @@ See [Authentication](/docs/human-api/authentication) for details and response sh
 | **Secrets** | PUT/GET/DELETE /v1/vaults/:vault_id/secrets/:path, GET /v1/vaults/:vault_id/secrets | Store, read, list, delete secrets |
 | **Policies** | POST/GET /v1/vaults/:vault_id/policies, PUT/DELETE .../policies/:policy_id | Grant/revoke access to principals |
 | **Agents** | POST/GET /v1/agents, GET/PATCH/DELETE /v1/agents/:agent_id, POST .../rotate-key | Register agents, rotate keys |
-| **Sharing** | POST /v1/secrets/:secret_id/share, DELETE /v1/share/:share_id | Share links (optional) |
+| **Sharing** | POST /v1/secrets/:secret_id/share, GET/DELETE /v1/share/:share_id | Share secrets by email or link ([guide](/docs/guides/sharing-secrets)) |
 | **Audit** | GET /v1/audit/events | Query audit events |
 | **Billing** | GET /v1/billing/usage, GET /v1/billing/history | Usage and history |
 | **Org** | GET /v1/org/members, PATCH/DELETE /v1/org/members/:user_id | Team members |
@@ -1614,7 +1782,7 @@ See [Authentication](/docs/human-api/authentication) for details and response sh
 
 ---
 
-## Create or update a secret
+## 
 
 ---
 title: Create or update a secret
@@ -1692,7 +1860,7 @@ All error bodies use RFC 7807 problem-details (`type`, `title`, `status`, `detai
 
 ---
 
-## Delete a secret
+## 
 
 ---
 title: Delete a secret
@@ -1731,7 +1899,7 @@ After deletion, `GET .../secrets/:path` for that path returns **410 Gone**.
 
 ---
 
-## Read a secret
+## 
 
 ---
 title: Read a secret
@@ -1788,7 +1956,7 @@ Treat the `value` field as highly sensitive; do not log or persist it unnecessar
 
 ---
 
-## Rotate a secret
+## 
 
 ---
 title: Rotate a secret
@@ -1825,7 +1993,7 @@ If the server responds with **400** and a message like "Secret rotation not yet 
 
 ---
 
-## Update a secret (new version)
+## 
 
 ---
 title: Update a secret (new version)
@@ -1863,7 +2031,7 @@ To read a **specific** version, use the versioned endpoint if your deployment su
 
 ---
 
-## Introduction
+## 
 
 ---
 title: Introduction
@@ -1879,21 +2047,28 @@ sidebar_position: 0
 
 AI agents often need secrets (API keys, tokens, DB credentials) to call external services. If you paste a secret into a chat or put it in an agent's environment, it can be logged, leaked, or retained. 1claw keeps secrets in an HSM-backed vault and gives agents **scoped, audited, revocable** access: the agent authenticates to 1claw and requests a secret by path; 1claw returns the decrypted value only if the agent is allowed. The agent never stores the secret; you can revoke access or rotate the secret at any time.
 
-## How it works (high level)
+## Architecture
 
 ```
-┌─────────────┐     JWT (user or agent)      ┌─────────────┐
-│  Human or   │ ───────────────────────────▶ │  Vault API  │
-│  AI Agent   │                               │  (Rust)     │
-└─────────────┘                               └──────┬──────┘
-                                                    │
-                    ┌───────────────────────────────┼───────────────────────────────┐
-                    ▼                               ▼                               ▼
-             ┌──────────────┐               ┌──────────────┐               ┌──────────────┐
-             │  Supabase    │               │  Cloud KMS   │               │  Audit log   │
-             │  (Postgres)  │               │  (KEK/JWT)   │               │  (events)    │
-             └──────────────┘               └──────────────┘               └──────────────┘
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Dashboard  │────▶│  Vault API  │◀────│  MCP Server │
+│  (Next.js)  │     │  (Rust)     │     │  (Node.js)  │
+│  1claw.xyz  │     │ api.1claw.xyz│    │mcp.1claw.xyz│
+└─────────────┘     └──────┬──────┘     └─────────────┘
+                           │
+                ┌──────────┼──────────┐
+                ▼          ▼          ▼
+          ┌──────────┐ ┌──────┐ ┌──────────┐
+          │ Supabase │ │ KMS  │ │  Audit   │
+          │ Postgres │ │(keys)│ │  (log)   │
+          └──────────┘ └──────┘ └──────────┘
 ```
+
+- **Dashboard** — The web UI at [1claw.xyz](https://1claw.xyz) where humans manage vaults, secrets, agents, and policies. After you sign in, the left sidebar gives you: **Dashboard**, **Vaults**, **Agents**, **Sharing**, **Audit Log**, **Security**, **API Keys**, **Billing**, and **Team**.
+- **Vault API** — The Rust backend that handles authentication, envelope encryption, policy enforcement, and all CRUD operations. Both the dashboard and MCP server talk to it.
+- **MCP Server** — A [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI agents (Claude, Cursor, GPT) just-in-time access to vault secrets. Available hosted at `mcp.1claw.xyz` or as a local stdio process.
+
+### How humans and agents interact
 
 - **Humans** log in (email/password or Google) or use a personal API key (`1ck_`). They create vaults, store secrets at paths, register agents, and attach policies that grant agents (or users) read/write access to path patterns.
 - **Agents** authenticate with an agent API key (`ocv_`) via `POST /v1/auth/agent-token` to get a short-lived JWT, then call the same API to list secrets and fetch secret values by path. Access is enforced by policies; all access is audited.
@@ -1931,7 +2106,7 @@ Base URL: `https://api.1claw.xyz` (or your Cloud Run URL). The dashboard at [1cl
 
 ---
 
-## MCP Deployment
+## 
 
 ---
 title: MCP Deployment
@@ -2006,7 +2181,7 @@ Note: In hosted mode, auth credentials come from client request headers (`Author
 
 ---
 
-## MCP Server
+## 
 
 ---
 title: MCP Server Overview
@@ -2061,9 +2236,10 @@ Secrets are fetched at runtime and never persisted in the LLM context window bey
 | `describe_secret` | Get metadata (type, version, expiry) without fetching the value | Read |
 | `rotate_and_store` | Store a new value for an existing secret and return the new version | Write |
 | `get_env_bundle` | Fetch an `env_bundle` secret and parse its KEY=VALUE lines as JSON | Read |
-| `create_vault` | Create a new vault owned by the agent; auto-shares with creator | — |
-| `list_vaults` | List all vaults accessible to the agent (own + shared) | — |
-| `grant_access` | Create an access policy sharing a vault with another principal | — |
+| `create_vault` | Create a new vault | Write |
+| `list_vaults` | List all accessible vaults | Read |
+| `grant_access` | Grant a user or agent access to a vault | Write |
+| `share_secret` | Share a secret with someone by email | Write |
 
 ## Resources
 
@@ -2081,7 +2257,7 @@ Secrets are fetched at runtime and never persisted in the LLM context window bey
 
 ---
 
-## MCP Security
+## 
 
 ---
 title: MCP Security
@@ -2183,7 +2359,7 @@ The MCP server translates vault API errors into clear, actionable messages:
 
 ---
 
-## Setup Guide
+## 
 
 ---
 title: MCP Setup Guide
@@ -2331,7 +2507,7 @@ pnpm inspect
 
 ---
 
-## Tool Reference
+## 
 
 ---
 title: MCP Tool Reference
@@ -2520,35 +2696,29 @@ The secret value should contain one `KEY=VALUE` per line. Lines starting with `#
 
 ## create_vault
 
-Create a new vault owned by the agent. The vault is automatically shared with the human who registered the agent (full read/write/delete access). Use descriptive names so your human collaborator can find it in the dashboard.
+Create a new vault for organizing secrets.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `name` | string | Yes | Vault name (e.g. `stripe-production`, `ci-deploy-keys`) |
-| `description` | string | No | Short description of what the vault is for |
+| `name` | string | Yes | Vault name |
+| `description` | string | No | Description of the vault's purpose |
 
 ### Example
 
 ```
-Agent: "Create a vault for the Stripe API keys I found"
-→ create_vault(name: "stripe-production", description: "Production Stripe credentials")
+Agent: "Create a vault for production API keys"
+→ create_vault(name: "prod-keys", description: "Production API credentials")
 
-Vault created successfully.
-  ID: abc-123
-  Name: stripe-production
-  Owner: agent:ec7e0226-...
-
-The vault has been automatically shared with your creator.
-You can now store secrets with put_secret.
+Vault 'prod-keys' created (id: ae370174-...).
 ```
 
 ---
 
 ## list_vaults
 
-List all vaults accessible to the agent — both vaults the agent created and vaults shared with it via policies.
+List all vaults accessible to the authenticated agent.
 
 ### Parameters
 
@@ -2560,46 +2730,65 @@ None.
 Agent: "What vaults do I have access to?"
 → list_vaults()
 
-Found 3 vault(s):
-- My Vault  (id: ae370174-..., created by: user, 2026-02-15T10:00:00Z)
-- stripe-production  (id: abc-123, created by: agent, 2026-02-18T20:00:00Z)
-- ci-keys  (id: def-456, created by: agent, 2026-02-18T21:00:00Z)
+Found 2 vault(s):
+- prod-keys (ae370174-...)
+- staging (bf481285-...)
 ```
 
 ---
 
 ## grant_access
 
-Grant a user or agent access to one of your vaults. Agents can only grant access on vaults they own (created_by_type = agent). Use this to share secrets with team members or other agents.
+Grant a user or agent access to a vault by creating an access policy.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `vault_id` | string (UUID) | Yes | ID of the vault to share |
-| `principal_type` | `user` or `agent` | Yes | Type of principal to grant access to |
-| `principal_id` | string (UUID) | Yes | UUID of the user or agent |
-| `permissions` | array of strings | No | Permissions to grant (default: `["read"]`) |
-| `secret_path_pattern` | string | No | Glob pattern for which secrets the policy covers (default: `**`) |
+| `vault_id` | string | Yes | UUID of the vault |
+| `principal_type` | string | Yes | `user` or `agent` |
+| `principal_id` | string | Yes | UUID of the user or agent |
+| `permissions` | string[] | No | Array of permissions: `read`, `write`, `delete` (default: `["read"]`) |
+| `secret_path_pattern` | string | No | Glob pattern to restrict access (default: `**` — all secrets) |
 
 ### Example
 
 ```
-Agent: "Share the stripe vault with user abc-123 for read-only access"
-→ grant_access(vault_id: "abc-123", principal_type: "user", principal_id: "2a57eb5e-...", permissions: ["read"])
+Agent: "Give agent abc123 read access to the prod-keys vault"
+→ grant_access(vault_id: "ae370174-...", principal_type: "agent", principal_id: "abc123", permissions: ["read"])
 
-Access granted.
-  Policy ID: pol-789
-  Vault: abc-123
-  Granted to: user:2a57eb5e-...
-  Permissions: read
-  Path pattern: **
+Access granted to agent abc123 on vault prod-keys.
+```
+
+---
+
+## share_secret
+
+Share a secret with someone via email. The recipient doesn't need a 1Claw account — they'll receive an email invitation and the share will be claimed when they sign up or log in.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `secret_id` | string | Yes | UUID of the secret to share |
+| `email` | string | Yes | Recipient's email address |
+| `expires_at` | string | Yes | ISO 8601 expiry datetime (e.g. `2026-03-01T00:00:00Z`) |
+| `max_access_count` | number | No | Maximum number of times the share can be accessed (default: 5) |
+
+### Example
+
+```
+Agent: "Share the Stripe API key with alice@example.com"
+→ share_secret(secret_id: "cf592...", email: "alice@example.com", max_access_count: 3)
+
+Secret shared with alice@example.com. Share ID: df703...
+They'll receive an email and can access the secret after signing in.
 ```
 
 
 ---
 
-## Quickstart for agents
+## 
 
 ---
 title: Quickstart for agents
@@ -2678,7 +2867,7 @@ If the agent has no read permission for that path, or the secret is expired/dele
 
 ---
 
-## Quickstart for humans
+## 
 
 ---
 title: Quickstart for humans
@@ -2798,7 +2987,7 @@ Returns `{ "secrets": [ ... ] }` with id, path, type, version, metadata, created
 
 ---
 
-## API reference
+## 
 
 ---
 title: API reference
@@ -2808,7 +2997,7 @@ sidebar_position: 0
 
 # API reference
 
-The canonical API spec is the **OpenAPI 3.1** document in the monorepo root: [openapi.yaml](https://github.com/1clawAI/1claw/blob/main/openapi.yaml). It defines all paths, request/response schemas, and error shapes.
+The canonical API spec is the **OpenAPI 3.1** document shipped with the project. It defines all paths, request/response schemas, and error shapes.
 
 ## Base URL
 
@@ -2819,6 +3008,7 @@ All endpoints are under **/v1**.
 
 ## Endpoints summary
 
+- **POST** `/v1/auth/signup` — Self-service signup (email + password) → JWT
 - **POST** `/v1/auth/token` — Email/password to JWT
 - **POST** `/v1/auth/agent-token` — Agent ID + API key to JWT
 - **POST** `/v1/auth/api-key-token` — Personal API key to JWT
@@ -2846,9 +3036,9 @@ All endpoints are under **/v1**.
 - **PATCH** `/v1/agents/:agent_id` — Update agent
 - **DELETE** `/v1/agents/:agent_id` — Deactivate agent
 - **POST** `/v1/agents/:agent_id/rotate-key` — Rotate agent key
-- **POST** `/v1/secrets/:secret_id/share` — Create share link
-- **GET** `/v1/share/:share_id` — Access share (public)
-- **DELETE** `/v1/share/:share_id` — Revoke share
+- **POST** `/v1/secrets/:secret_id/share` — Create share link (supports email invites)
+- **GET** `/v1/share/:share_id` — Access shared secret (public, checks expiry + access count)
+- **DELETE** `/v1/share/:share_id` — Revoke share (creator only)
 - **GET** `/v1/billing/usage` — Usage summary
 - **GET** `/v1/billing/history` — Usage history
 - **GET** `/v1/audit/events` — Query audit events
@@ -2864,7 +3054,7 @@ Note: The OpenAPI spec may use `username` for `/v1/auth/token`; the **actual** A
 
 ---
 
-## Changelog
+## 
 
 ---
 title: Changelog
@@ -2874,18 +3064,64 @@ sidebar_position: 3
 
 # Changelog
 
-For detailed release history, see the [1claw repository](https://github.com/1clawAI/1claw) commits.
+For detailed release history, see the [1clawAI GitHub](https://github.com/1clawAI) repositories.
 
 ## API stability
 
 The **/v1** API is stable. Breaking changes would be accompanied by a new version prefix or clear deprecation notices. New optional fields or endpoints are added in a backward-compatible way.
 
-## 2026-02
+## 2026-02 (latest)
+
+### Agent integration guide
+
+- **New:** Agent detail page in the dashboard now includes a tabbed integration guide with copy-paste code snippets for TypeScript SDK, Python, curl, and MCP configuration.
+
+### PolyForm Noncommercial License
+
+- All repositories now include the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0).
+
+### Organization migration
+
+- All repositories moved to the [1clawAI](https://github.com/1clawAI) GitHub organization.
+
+### Email notifications
+
+- **New:** Transactional emails via [Resend](https://resend.com) for account and security events.
+- Welcome email on signup (email/password and Google OAuth).
+- Share invite email when a secret is shared by email.
+- Share access notification to the creator when a shared secret is accessed.
+- Password change confirmation email.
+- API key creation notification email.
+- Emails are fire-and-forget (non-blocking) and silently skipped when no `RESEND_API_KEY` is configured.
+
+### Sharing & invite-by-email
+
+- **New:** `external_email` share type — share secrets with users who don't have accounts yet.
+- **New:** Claim-on-login — pending email shares are automatically claimed when the recipient signs up or logs in.
+- **New:** Share access notifications — creators are emailed each time a shared secret is accessed.
+- **New:** `POST /v1/auth/signup` — self-service account registration via email/password.
+
+### SDK rewrite (`@1claw/sdk` v0.2.0)
+
+- **New:** Full API parity — typed methods for all 42+ REST API endpoints.
+- Resource modules: `vault`, `secrets`, `access`, `agents`, `sharing`, `auth`, `apiKeys`, `billing`, `audit`, `org`.
+- `createClient()` factory with auto-authentication (API key or agent credentials).
+- `{ data, error, meta }` response envelope on every method.
+- Typed error hierarchy: `AuthError`, `PaymentRequiredError`, `NotFoundError`, `RateLimitError`, etc.
+- x402 auto-payment support with configurable `maxAutoPayUsd`.
+- MCP tool layer: `McpHandler` and `getMcpToolDefinitions()` for AI agent frameworks.
+- `auth.signup()` for programmatic account creation.
+- `sharing.create()` with email support for invite-by-email.
+
+### Examples repository
+
+- **New:** `examples/basic/` — TypeScript scripts for vault CRUD, secrets, billing, signup, and email sharing.
+- **New:** `examples/nextjs-agent-secret/` — Next.js 14 app with Claude AI agent accessing vault secrets.
 
 ### MCP server (`@1claw/mcp`)
 
 - **New:** MCP server for AI agent access to secrets via the Model Context Protocol.
-- 10 tools: `list_secrets`, `get_secret`, `put_secret`, `delete_secret`, `describe_secret`, `rotate_and_store`, `get_env_bundle`, `create_vault`, `list_vaults`, `grant_access`.
+- 7 tools: `list_secrets`, `get_secret`, `put_secret`, `delete_secret`, `describe_secret`, `rotate_and_store`, `get_env_bundle`.
 - Browsable `vault://secrets` resource.
 - **Dual transport:** Local stdio mode (Claude Desktop, Cursor) and hosted HTTP streaming mode (`mcp.1claw.xyz`).
 - Per-session authentication in hosted mode — each connection gets its own vault client.
@@ -2935,7 +3171,7 @@ The **/v1** API is stable. Breaking changes would be accompanied by a new versio
 
 ---
 
-## Error codes
+## 
 
 ---
 title: Error codes
@@ -2976,7 +3212,7 @@ Use `status` for programmatic handling; use `detail` for user-facing messages (i
 
 ---
 
-## Rate limits
+## 
 
 ---
 title: Rate limits
@@ -2993,7 +3229,7 @@ Exact limits (requests per minute or per hour) depend on your deployment (e.g. C
 
 ---
 
-## curl examples
+## 
 
 ---
 title: curl examples
@@ -3075,69 +3311,171 @@ curl -s -X POST "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies" \
 
 ---
 
-## JavaScript / TypeScript SDK
+## 
 
 ---
 title: JavaScript / TypeScript SDK
-description: Use @1claw/sdk to authenticate as an agent and fetch secrets; the SDK handles JWT exchange and optional x402 payment errors.
+description: "@1claw/sdk provides full API parity — vaults, secrets, sharing, agents, billing, auth, and MCP tool integration."
 sidebar_position: 1
 ---
 
 # JavaScript / TypeScript SDK
 
-The official SDK lives in the monorepo at `packages/sdk` and is published as **@1claw/sdk**. It is aimed at **agent** use: authenticate with agent ID and API key, then fetch secrets.
+The official TypeScript SDK provides full API parity with the 1Claw REST API. It supports both human and agent workflows, x402 auto-payment, and an MCP tool layer for AI agents.
+
+**Repository:** [github.com/1clawAI/1claw-sdk](https://github.com/1clawAI/1claw-sdk)
 
 ## Install
 
 ```bash
 npm install @1claw/sdk
-# or
-pnpm add @1claw/sdk
 ```
 
-## Configuration
+## Quick start
 
 ```ts
-import { OneClawClient } from "@1claw/sdk";
+import { createClient } from "@1claw/sdk";
 
-const client = new OneClawClient({
+const client = createClient({
   baseUrl: "https://api.1claw.xyz",
-  apiKey: process.env.ONECLAW_AGENT_API_KEY,
-  maxPaymentPerRequest: 1.0, // optional; for x402 payment safety
+  apiKey: process.env.ONECLAW_API_KEY, // personal API key (1ck_...)
+});
+
+// Create a vault
+const { data: vault } = await client.vault.create({
+  name: "my-vault",
+  description: "Production secrets",
+});
+
+// Store a secret
+await client.secrets.set(vault.id, "STRIPE_KEY", "sk_live_...", {
+  type: "api_key",
+});
+
+// Retrieve a secret
+const { data: secret } = await client.secrets.get(vault.id, "STRIPE_KEY");
+console.log(secret.value); // use securely, don't log in production
+```
+
+## Authentication
+
+The SDK supports three authentication methods:
+
+```ts
+// 1. Personal API key (recommended for server-side)
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  apiKey: "1ck_...",
+});
+
+// 2. Agent credentials
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  agentId: "uuid",
+  apiKey: "ocv_...",
+});
+
+// 3. Manual auth (signup, email/password)
+const client = createClient({ baseUrl: "https://api.1claw.xyz" });
+await client.auth.signup({ email: "me@example.com", password: "...", display_name: "Me" });
+// or
+await client.auth.login({ email: "me@example.com", password: "..." });
+```
+
+## Resource modules
+
+All API endpoints are organized into resource modules:
+
+| Module | Methods |
+|--------|---------|
+| `client.auth` | `login()`, `signup()`, `agentToken()`, `apiKeyToken()`, `google()`, `changePassword()`, `logout()` |
+| `client.vault` | `create()`, `list()`, `get()`, `delete()` |
+| `client.secrets` | `set()`, `get()`, `list()`, `delete()`, `rotate()` |
+| `client.access` | `grantHuman()`, `grantAgent()`, `update()`, `revoke()`, `listGrants()` |
+| `client.agents` | `create()`, `list()`, `get()`, `update()`, `delete()`, `rotateKey()` |
+| `client.sharing` | `create()`, `access()`, `revoke()` |
+| `client.approvals` | `request()`, `list()`, `approve()`, `deny()`, `check()` |
+| `client.apiKeys` | `create()`, `list()`, `revoke()` |
+| `client.billing` | `usage()`, `history()` |
+| `client.audit` | `query()` |
+| `client.org` | `listMembers()`, `updateMemberRole()`, `removeMember()` |
+| `client.x402` | `getPaymentRequirement()`, `pay()`, `verifyReceipt()`, `withPayment()` |
+
+## Sharing by email
+
+Share a secret with someone who may not have an account yet:
+
+```ts
+const { data: share } = await client.sharing.create(secretId, {
+  recipient_type: "external_email",
+  email: "colleague@example.com",
+  expires_at: "2026-04-01T00:00:00Z",
+  max_access_count: 3,
+});
+// Recipient gets an email; the share auto-claims when they sign up/log in
+```
+
+## Response envelope
+
+Every method returns `{ data, error, meta }`:
+
+```ts
+const res = await client.secrets.get(vaultId, "MY_KEY");
+if (res.error) {
+  console.error(res.error.message); // typed error
+} else {
+  console.log(res.data.value);
+}
+```
+
+## Error types
+
+```ts
+import {
+  OneclawError,
+  AuthError,              // 401
+  PaymentRequiredError,   // 402 (x402)
+  ApprovalRequiredError,  // 403 (approval pending)
+  NotFoundError,          // 404
+  RateLimitError,         // 429
+} from "@1claw/sdk";
+```
+
+## MCP tool integration
+
+The SDK includes an MCP tool layer for AI agent frameworks:
+
+```ts
+import { McpHandler, getMcpToolDefinitions } from "@1claw/sdk/mcp";
+
+// Get tool schemas for registration with an AI framework
+const tools = getMcpToolDefinitions();
+
+// Handle tool calls
+const handler = new McpHandler(client);
+const result = await handler.handle("1claw_get_secret", {
+  vault_id: "...",
+  key: "STRIPE_KEY",
 });
 ```
 
-## Authenticate (agent)
+Available MCP tools: `1claw_get_secret`, `1claw_set_secret`, `1claw_list_secret_keys`, `1claw_request_approval`, `1claw_check_approval_status`, `1claw_pay_and_fetch`, `1claw_create_vault`, `1claw_list_vaults`, `1claw_share_secret`.
 
-```ts
-await client.authenticate(process.env.ONECLAW_AGENT_ID!);
-// SDK stores the JWT and uses it for subsequent requests
-```
+## Examples
 
-This calls `POST /v1/auth/agent-token` and stores the returned `access_token`.
+See the [examples repository](https://github.com/1clawAI/1claw-examples) for runnable demos:
 
-## Fetch a secret
-
-After authentication, use the client to fetch a secret by vault ID and path. The SDK uses the stored JWT and handles 402 (payment required) according to config; wallet-based x402 may not be implemented yet.
-
-```ts
-const vaultId = "ae370174-9aee-4b02-ba7c-d1519930c709";
-const secret = await client.getSecret(vaultId, "api-keys/openai");
-console.log(secret.value); // use securely; don't log
-```
-
-## Types
-
-Exported types include `OneClawConfig`, `SecretResponse`, `VaultResponse`, `ShareOptions`, and `PaymentRequired`. See `packages/sdk/src/types.ts` in the repo.
+- **basic/** — Vault CRUD, secrets, billing, signup, email-based sharing
+- **nextjs-agent-secret/** — AI agent with Claude accessing vault secrets via MCP tools
 
 ## Human API (dashboard / server)
 
-The dashboard uses **fetch** and **TanStack Query** with the same base URL and JWT from login (email/password or Google). There is no separate “human” SDK package; use fetch or your own client with the [Human API](/docs/human-api/overview) and [Authentication](/docs/human-api/authentication) docs.
+The dashboard uses **fetch** and **TanStack Query** with the same base URL and JWT. There is no separate "human" SDK package; use `@1claw/sdk` or fetch with the [Human API](/docs/human-api/overview) docs.
 
 
 ---
 
-## SDKs overview
+## 
 
 ---
 title: SDKs overview
@@ -3151,12 +3489,12 @@ sidebar_position: 0
 - **Python** — No official SDK yet; use [curl examples](/docs/sdks/curl-examples) or implement a thin client with `requests`/`httpx`. See [Python](/docs/sdks/python).
 - **curl / HTTP** — All endpoints are REST; you can use curl, fetch, or any HTTP client. See [curl examples](/docs/sdks/curl-examples).
 
-The API is stable and documented in the [OpenAPI spec](https://github.com/1clawAI/1claw/blob/main/openapi.yaml) in the repo root.
+The API is stable and documented in the OpenAPI 3.1 spec shipped with the project.
 
 
 ---
 
-## Python
+## 
 
 ---
 title: Python
@@ -3220,7 +3558,7 @@ Then use `Authorization: Bearer <token>` for vaults, secrets, policies, and agen
 
 ---
 
-## Compliance
+## 
 
 ---
 title: Compliance
@@ -3247,7 +3585,7 @@ Use the [Audit API](/docs/guides/audit-and-compliance) and policy model to docum
 
 ---
 
-## HSM overview
+## 
 
 ---
 title: HSM overview
@@ -3275,7 +3613,7 @@ See [Key hierarchy](/docs/security/key-hierarchy) and [HSM architecture](/docs/c
 
 ---
 
-## Key hierarchy
+## 
 
 ---
 title: Key hierarchy
@@ -3303,7 +3641,7 @@ This is standard **envelope encryption**. Compromise of the database or applicat
 
 ---
 
-## Zero trust
+## 
 
 ---
 title: Zero trust
@@ -3336,3 +3674,7 @@ sidebar_position: 2
 - Clients must use HTTPS. The API is served over TLS. Do not send tokens or secrets over plain HTTP.
 
 See [Trust model](/docs/concepts/trust-model) for a short summary.
+
+
+---
+
