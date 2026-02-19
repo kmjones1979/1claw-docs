@@ -17,6 +17,7 @@ All endpoints are under **/v1**.
 
 ## Endpoints summary
 
+- **POST** `/v1/auth/signup` — Self-service signup (email + password) → JWT
 - **POST** `/v1/auth/token` — Email/password to JWT
 - **POST** `/v1/auth/agent-token` — Agent ID + API key to JWT
 - **POST** `/v1/auth/api-key-token` — Personal API key to JWT
@@ -44,9 +45,9 @@ All endpoints are under **/v1**.
 - **PATCH** `/v1/agents/:agent_id` — Update agent
 - **DELETE** `/v1/agents/:agent_id` — Deactivate agent
 - **POST** `/v1/agents/:agent_id/rotate-key` — Rotate agent key
-- **POST** `/v1/secrets/:secret_id/share` — Create share link
-- **GET** `/v1/share/:share_id` — Access share (public)
-- **DELETE** `/v1/share/:share_id` — Revoke share
+- **POST** `/v1/secrets/:secret_id/share` — Create share link (supports email invites)
+- **GET** `/v1/share/:share_id` — Access shared secret (public, checks expiry + access count)
+- **DELETE** `/v1/share/:share_id` — Revoke share (creator only)
 - **GET** `/v1/billing/usage` — Usage summary
 - **GET** `/v1/billing/history` — Usage history
 - **GET** `/v1/audit/events` — Query audit events

@@ -27,6 +27,7 @@ Ways to get an access token:
 
 | Method | Endpoint | Request body |
 |--------|----------|--------------|
+| **Signup** | `POST /v1/auth/signup` | `{ "email", "password", "display_name?" }` |
 | Email + password | `POST /v1/auth/token` | `{ "email", "password" }` |
 | Google OAuth | `POST /v1/auth/google` | `{ "id_token" }` |
 | Personal API key | `POST /v1/auth/api-key-token` | `{ "api_key" }` (e.g. `1ck_...`) |
@@ -41,7 +42,7 @@ See [Authentication](/docs/human-api/authentication) for details and response sh
 | **Secrets** | PUT/GET/DELETE /v1/vaults/:vault_id/secrets/:path, GET /v1/vaults/:vault_id/secrets | Store, read, list, delete secrets |
 | **Policies** | POST/GET /v1/vaults/:vault_id/policies, PUT/DELETE .../policies/:policy_id | Grant/revoke access to principals |
 | **Agents** | POST/GET /v1/agents, GET/PATCH/DELETE /v1/agents/:agent_id, POST .../rotate-key | Register agents, rotate keys |
-| **Sharing** | POST /v1/secrets/:secret_id/share, DELETE /v1/share/:share_id | Share links (optional) |
+| **Sharing** | POST /v1/secrets/:secret_id/share, GET/DELETE /v1/share/:share_id | Share secrets by email or link ([guide](/docs/guides/sharing-secrets)) |
 | **Audit** | GET /v1/audit/events | Query audit events |
 | **Billing** | GET /v1/billing/usage, GET /v1/billing/history | Usage and history |
 | **Org** | GET /v1/org/members, PATCH/DELETE /v1/org/members/:user_id | Team members |

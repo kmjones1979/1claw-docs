@@ -39,6 +39,10 @@ Both humans and agents are first-class principals. Either can create vaults, sto
 - **Pricing**: Read secret $0.001, write $0.005, share $0.002, audit $0.0005.
 - Usage is tracked across dashboard, SDK, and MCP — all count against the same quota.
 
+## Web dashboard
+
+At [1claw.xyz](https://1claw.xyz) you sign in (email/password or Google), then use the sidebar: **Dashboard**, **Vaults**, **Agents**, **Sharing**, **Audit Log**, **Security**, **API Keys**, **Billing**, **Team**. Create vaults and secrets under Vaults; register agents under Agents; manage members under Team; view usage under Billing.
+
 ## Core concepts
 
 - **Vault** — A container for secrets; each vault has its own HSM-backed key (KEK). Both humans and agents can create vaults. Agent-created vaults are automatically shared with the agent's human creator.

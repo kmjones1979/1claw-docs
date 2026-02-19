@@ -180,3 +180,96 @@ Agent: "Get the production environment variables"
 ```
 
 The secret value should contain one `KEY=VALUE` per line. Lines starting with `#` and blank lines are ignored.
+
+---
+
+## create_vault
+
+Create a new vault for organizing secrets.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | string | Yes | Vault name |
+| `description` | string | No | Description of the vault's purpose |
+
+### Example
+
+```
+Agent: "Create a vault for production API keys"
+→ create_vault(name: "prod-keys", description: "Production API credentials")
+
+Vault 'prod-keys' created (id: ae370174-...).
+```
+
+---
+
+## list_vaults
+
+List all vaults accessible to the authenticated agent.
+
+### Parameters
+
+None.
+
+### Example
+
+```
+Agent: "What vaults do I have access to?"
+→ list_vaults()
+
+Found 2 vault(s):
+- prod-keys (ae370174-...)
+- staging (bf481285-...)
+```
+
+---
+
+## grant_access
+
+Grant a user or agent access to a vault by creating an access policy.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `vault_id` | string | Yes | UUID of the vault |
+| `principal_type` | string | Yes | `user` or `agent` |
+| `principal_id` | string | Yes | UUID of the user or agent |
+| `permissions` | string[] | Yes | Array of permissions: `read`, `write`, `delete` |
+| `secret_path_pattern` | string | No | Glob pattern to restrict access (e.g. `api-keys/*`) |
+
+### Example
+
+```
+Agent: "Give agent abc123 read access to the prod-keys vault"
+→ grant_access(vault_id: "ae370174-...", principal_type: "agent", principal_id: "abc123", permissions: ["read"])
+
+Access granted to agent abc123 on vault prod-keys.
+```
+
+---
+
+## share_secret
+
+Share a secret with someone via email. The recipient doesn't need a 1Claw account — they'll receive an email invitation and the share will be claimed when they sign up or log in.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `secret_id` | string | Yes | UUID of the secret to share |
+| `email` | string | Yes | Recipient's email address |
+| `expires_at` | string | No | ISO 8601 expiry datetime (default: 7 days) |
+| `max_access_count` | number | No | Maximum number of times the share can be accessed (default: 1) |
+
+### Example
+
+```
+Agent: "Share the Stripe API key with alice@example.com"
+→ share_secret(secret_id: "cf592...", email: "alice@example.com", max_access_count: 3)
+
+Secret shared with alice@example.com. Share ID: df703...
+They'll receive an email and can access the secret after signing in.
+```

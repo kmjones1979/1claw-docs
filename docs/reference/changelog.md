@@ -12,7 +12,41 @@ For detailed release history, see the [1claw repository](https://github.com/kmjo
 
 The **/v1** API is stable. Breaking changes would be accompanied by a new version prefix or clear deprecation notices. New optional fields or endpoints are added in a backward-compatible way.
 
-## 2026-02
+## 2026-02 (latest)
+
+### Email notifications
+
+- **New:** Transactional emails via [Resend](https://resend.com) for account and security events.
+- Welcome email on signup (email/password and Google OAuth).
+- Share invite email when a secret is shared by email.
+- Share access notification to the creator when a shared secret is accessed.
+- Password change confirmation email.
+- API key creation notification email.
+- Emails are fire-and-forget (non-blocking) and silently skipped when no `RESEND_API_KEY` is configured.
+
+### Sharing & invite-by-email
+
+- **New:** `external_email` share type — share secrets with users who don't have accounts yet.
+- **New:** Claim-on-login — pending email shares are automatically claimed when the recipient signs up or logs in.
+- **New:** Share access notifications — creators are emailed each time a shared secret is accessed.
+- **New:** `POST /v1/auth/signup` — self-service account registration via email/password.
+
+### SDK rewrite (`@1claw/sdk` v0.2.0)
+
+- **New:** Full API parity — typed methods for all 42+ REST API endpoints.
+- Resource modules: `vault`, `secrets`, `access`, `agents`, `sharing`, `auth`, `apiKeys`, `billing`, `audit`, `org`.
+- `createClient()` factory with auto-authentication (API key or agent credentials).
+- `{ data, error, meta }` response envelope on every method.
+- Typed error hierarchy: `AuthError`, `PaymentRequiredError`, `NotFoundError`, `RateLimitError`, etc.
+- x402 auto-payment support with configurable `maxAutoPayUsd`.
+- MCP tool layer: `McpHandler` and `getMcpToolDefinitions()` for AI agent frameworks.
+- `auth.signup()` for programmatic account creation.
+- `sharing.create()` with email support for invite-by-email.
+
+### Examples repository
+
+- **New:** `examples/basic/` — TypeScript scripts for vault CRUD, secrets, billing, signup, and email sharing.
+- **New:** `examples/nextjs-agent-secret/` — Next.js 14 app with Claude AI agent accessing vault secrets.
 
 ### MCP server (`@1claw/mcp`)
 

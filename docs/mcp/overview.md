@@ -51,6 +51,10 @@ Secrets are fetched at runtime and never persisted in the LLM context window bey
 | `describe_secret` | Get metadata (type, version, expiry) without fetching the value | Read |
 | `rotate_and_store` | Store a new value for an existing secret and return the new version | Write |
 | `get_env_bundle` | Fetch an `env_bundle` secret and parse its KEY=VALUE lines as JSON | Read |
+| `create_vault` | Create a new vault | Write |
+| `list_vaults` | List all accessible vaults | Read |
+| `grant_access` | Grant a user or agent access to a vault | Write |
+| `share_secret` | Share a secret with someone by email | Write |
 
 ## Resources
 

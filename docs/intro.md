@@ -29,7 +29,7 @@ AI agents often need secrets (API keys, tokens, DB credentials) to call external
           └──────────┘ └──────┘ └──────────┘
 ```
 
-- **Dashboard** — The web UI at [1claw.xyz](https://1claw.xyz) where humans manage vaults, secrets, agents, and policies.
+- **Dashboard** — The web UI at [1claw.xyz](https://1claw.xyz) where humans manage vaults, secrets, agents, and policies. After you sign in, the left sidebar gives you: **Dashboard**, **Vaults**, **Agents**, **Sharing**, **Audit Log**, **Security**, **API Keys**, **Billing**, and **Team**.
 - **Vault API** — The Rust backend that handles authentication, envelope encryption, policy enforcement, and all CRUD operations. Both the dashboard and MCP server talk to it.
 - **MCP Server** — A [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI agents (Claude, Cursor, GPT) just-in-time access to vault secrets. Available hosted at `mcp.1claw.xyz` or as a local stdio process.
 
