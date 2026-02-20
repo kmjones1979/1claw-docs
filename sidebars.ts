@@ -90,6 +90,7 @@ const sidebars: SidebarsConfig = {
                 "guides/rotating-secrets",
                 "guides/scoped-permissions",
                 "guides/sharing-secrets",
+                "guides/crypto-proxy",
                 "guides/revoking-access",
                 "guides/mcp-integration",
                 "guides/email-notifications",
