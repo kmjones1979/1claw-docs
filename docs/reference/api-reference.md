@@ -1,6 +1,6 @@
 ---
 title: API reference
-description: Full API reference is provided by the OpenAPI 3.1 spec in the repository; base URL and all v1 endpoints are listed here.
+description: Complete list of all v1 API endpoints for the 1claw vault, grouped by domain.
 sidebar_position: 0
 ---
 
@@ -10,52 +10,162 @@ The canonical API spec is the **OpenAPI 3.1** document shipped with the project.
 
 ## Base URL
 
-- **Production:** `https://api.1claw.xyz` (or your Cloud Run URL)
+- **Production:** `https://api.1claw.xyz`
 - **Dashboard proxy:** `https://1claw.xyz/api` (proxies to the same API)
 
 All endpoints are under **/v1**.
 
-## Endpoints summary
+---
 
-- **POST** `/v1/auth/signup` — Self-service signup (email + password) → JWT
-- **POST** `/v1/auth/token` — Email/password to JWT
-- **POST** `/v1/auth/agent-token` — Agent ID + API key to JWT
-- **POST** `/v1/auth/api-key-token` — Personal API key to JWT
-- **POST** `/v1/auth/google` — Google id_token to JWT
-- **POST** `/v1/auth/refresh` — Refresh token to JWT
-- **DELETE** `/v1/auth/token` — Revoke token
-- **POST** `/v1/auth/change-password` — Change password
-- **GET** `/v1/health` — Service health
-- **GET** `/v1/health/hsm` — HSM connectivity
-- **POST** `/v1/vaults` — Create vault
-- **GET** `/v1/vaults` — List vaults
-- **GET** `/v1/vaults/:vault_id` — Get vault
-- **DELETE** `/v1/vaults/:vault_id` — Delete vault
-- **GET** `/v1/vaults/:vault_id/secrets` — List secrets
-- **PUT** `/v1/vaults/:vault_id/secrets/:path` — Create/update secret (path is wildcard)
-- **GET** `/v1/vaults/:vault_id/secrets/:path` — Get secret value
-- **DELETE** `/v1/vaults/:vault_id/secrets/:path` — Delete secret
-- **POST** `/v1/vaults/:vault_id/policies` — Create policy
-- **GET** `/v1/vaults/:vault_id/policies` — List policies
-- **PUT** `/v1/vaults/:vault_id/policies/:policy_id` — Update policy
-- **DELETE** `/v1/vaults/:vault_id/policies/:policy_id` — Delete policy
-- **POST** `/v1/agents` — Register agent
-- **GET** `/v1/agents` — List agents
-- **GET** `/v1/agents/:agent_id` — Get agent
-- **PATCH** `/v1/agents/:agent_id` — Update agent
-- **DELETE** `/v1/agents/:agent_id` — Deactivate agent
-- **POST** `/v1/agents/:agent_id/rotate-key` — Rotate agent key
-- **POST** `/v1/secrets/:secret_id/share` — Create share link (supports email invites)
-- **GET** `/v1/share/:share_id` — Access shared secret (public, checks expiry + access count)
-- **DELETE** `/v1/share/:share_id` — Revoke share (creator only)
-- **GET** `/v1/billing/usage` — Usage summary
-- **GET** `/v1/billing/history` — Usage history
-- **GET** `/v1/audit/events` — Query audit events
-- **GET** `/v1/org/members` — List org members
-- **PATCH** `/v1/org/members/:user_id` — Update member role
-- **DELETE** `/v1/org/members/:user_id` — Remove member
-- **POST** `/v1/auth/api-keys` — Create API key
-- **GET** `/v1/auth/api-keys` — List API keys
-- **DELETE** `/v1/auth/api-keys/:key_id` — Revoke API key
+## Public (no auth)
 
-Note: The OpenAPI spec may use `username` for `/v1/auth/token`; the **actual** API expects `email` and `password`. See [Authentication](/docs/human-api/authentication).
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/health` | Service health |
+| GET | `/v1/health/hsm` | HSM connectivity |
+| GET | `/v1/share/:share_id` | Access a shared secret (checks expiry + access count) |
+
+## Authentication
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/auth/signup` | Self-service signup (email + password) → JWT |
+| POST | `/v1/auth/token` | Email/password → JWT |
+| POST | `/v1/auth/agent-token` | Agent ID + API key → JWT |
+| POST | `/v1/auth/api-key-token` | Personal API key → JWT |
+| POST | `/v1/auth/google` | Google id_token → JWT |
+| POST | `/v1/auth/refresh` | Refresh token → new JWT |
+| DELETE | `/v1/auth/token` | Revoke token |
+| POST | `/v1/auth/change-password` | Change password |
+
+## Personal API Keys
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/auth/api-keys` | Create API key |
+| GET | `/v1/auth/api-keys` | List API keys |
+| DELETE | `/v1/auth/api-keys/:key_id` | Revoke API key |
+
+## Vaults
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/vaults` | Create vault |
+| GET | `/v1/vaults` | List vaults |
+| GET | `/v1/vaults/:vault_id` | Get vault |
+| DELETE | `/v1/vaults/:vault_id` | Delete vault |
+
+## Secrets
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/vaults/:vault_id/secrets` | List secrets (metadata only) |
+| PUT | `/v1/vaults/:vault_id/secrets/*path` | Create or update secret |
+| GET | `/v1/vaults/:vault_id/secrets/*path` | Get secret value (decrypted) |
+| DELETE | `/v1/vaults/:vault_id/secrets/*path` | Soft-delete secret |
+
+## Policies
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/vaults/:vault_id/policies` | Create policy |
+| GET | `/v1/vaults/:vault_id/policies` | List policies |
+| PUT | `/v1/vaults/:vault_id/policies/:policy_id` | Update policy |
+| DELETE | `/v1/vaults/:vault_id/policies/:policy_id` | Delete policy |
+
+## Agents
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/agents` | Register agent |
+| GET | `/v1/agents` | List agents |
+| GET | `/v1/agents/:agent_id` | Get agent |
+| PATCH | `/v1/agents/:agent_id` | Update agent (name, description, crypto_proxy_enabled) |
+| DELETE | `/v1/agents/:agent_id` | Deactivate agent |
+| POST | `/v1/agents/:agent_id/rotate-key` | Rotate agent API key |
+
+## Sharing
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/secrets/:secret_id/share` | Create share (supports email invites) |
+| GET | `/v1/shares/outbound` | List shares you created |
+| GET | `/v1/shares/inbound` | List shares sent to you |
+| POST | `/v1/shares/:share_id/accept` | Accept an inbound share |
+| POST | `/v1/shares/:share_id/decline` | Decline an inbound share |
+| DELETE | `/v1/share/:share_id` | Revoke share (creator only) |
+
+## Chains
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/chains` | List supported blockchain chains |
+| GET | `/v1/chains/:identifier` | Get chain by ID or chain_id |
+
+## Transactions (Crypto Proxy)
+
+Requires `crypto_proxy_enabled: true` on the agent.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/agents/:agent_id/transactions` | Submit a transaction |
+| GET | `/v1/agents/:agent_id/transactions` | List agent transactions |
+| GET | `/v1/agents/:agent_id/transactions/:tx_id` | Get transaction details |
+
+## Billing & Usage
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/billing/usage` | Usage summary (current period) |
+| GET | `/v1/billing/history` | Usage history |
+
+## Audit
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/audit/events` | Query audit events |
+
+## Organization
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/org/members` | List org members |
+| POST | `/v1/org/invite` | Invite member by email |
+| PATCH | `/v1/org/members/:user_id` | Update member role |
+| DELETE | `/v1/org/members/:user_id` | Remove member |
+
+## Security (IP Rules)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/security/ip-rules` | List IP allow/block rules |
+| POST | `/v1/security/ip-rules` | Create IP rule |
+| DELETE | `/v1/security/ip-rules/:rule_id` | Delete IP rule |
+
+## Admin
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/admin/settings` | List all settings |
+| PUT | `/v1/admin/settings/:key` | Update a setting |
+| DELETE | `/v1/admin/settings/:key` | Delete a setting |
+| GET | `/v1/admin/x402` | Get x402 payment config |
+| PUT | `/v1/admin/x402` | Update x402 payment config |
+| GET | `/v1/admin/users` | List all users (super-admin) |
+| GET | `/v1/admin/chains` | List chains (admin view) |
+| POST | `/v1/admin/chains` | Create chain |
+| PUT | `/v1/admin/chains/:chain_id` | Update chain |
+| DELETE | `/v1/admin/chains/:chain_id` | Delete chain |
+| GET | `/v1/admin/orgs/:org_id/limits` | Get org limits |
+| PUT | `/v1/admin/orgs/:org_id/limits` | Update org limits |
+
+---
+
+## Notes
+
+- The API expects `email` and `password` for `/v1/auth/token` (not `username`).
+- Secret paths are wildcard routes — e.g. `api-keys/openai`, `config/prod/db`.
+- Middleware layers applied to authenticated routes: **auth → IP filter → usage tracking**.
+- Crypto proxy routes additionally require the `crypto_proxy_enabled` claim in the JWT.
+- The **x402 middleware** runs on all routes and can gate access behind payment for configured endpoints.
+- See [Authentication](/docs/human-api/authentication) for details on obtaining and refreshing JWTs.

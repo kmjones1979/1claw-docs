@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
         {
             type: "category",
             label: "Quickstart",
+            link: { type: "doc", id: "quickstart/index" },
             items: ["quickstart/humans", "quickstart/agents"],
         },
         {
@@ -112,6 +113,7 @@ const sidebars: SidebarsConfig = {
             label: "Reference",
             items: [
                 "reference/api-reference",
+                "reference/api-mcp-testing",
                 "reference/error-codes",
                 "reference/rate-limits",
                 "reference/changelog",

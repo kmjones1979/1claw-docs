@@ -1,4 +1,4 @@
-## 
+## Audit log (agents)
 
 ---
 title: Audit log (agents)
@@ -46,7 +46,7 @@ Secret values are never included in audit payloads. See [Audit and compliance](/
 
 ---
 
-## 
+## Agent authentication
 
 ---
 title: Agent authentication
@@ -104,7 +104,7 @@ Never log or expose the API key; treat it like a password.
 
 ---
 
-## 
+## Agent API errors
 
 ---
 title: Agent API errors
@@ -130,7 +130,7 @@ See [Human API errors](/docs/human-api/errors) and [Error codes reference](/docs
 
 ---
 
-## 
+## Fetch a secret
 
 ---
 title: Fetch a secret
@@ -178,7 +178,7 @@ Use the `value` only for the intended operation; do not log or cache it longer t
 
 ---
 
-## 
+## List accessible secrets
 
 ---
 title: List accessible secrets
@@ -222,7 +222,7 @@ Values are **never** returned in list responses. To get a value, call [GET .../s
 
 ---
 
-## 
+## Agent API overview
 
 ---
 title: Agent API overview
@@ -260,7 +260,7 @@ Agents typically **do not** create vaults, register other agents, or manage poli
 
 ---
 
-## 
+## HSM architecture
 
 ---
 title: HSM architecture
@@ -306,7 +306,7 @@ See [Key hierarchy](/docs/security/key-hierarchy) and [Security overview](/docs/
 
 ---
 
-## 
+## Human vs Agent API
 
 ---
 title: Human vs Agent API
@@ -369,7 +369,7 @@ Humans need long-lived sessions or API keys for dashboards and automation; agent
 
 ---
 
-## 
+## Secrets model
 
 ---
 title: Secrets model
@@ -417,7 +417,7 @@ Values are never logged or returned in list/audit responses; only “secret acce
 
 ---
 
-## 
+## Trust model
 
 ---
 title: Trust model
@@ -451,7 +451,7 @@ See [Zero trust](/docs/security/zero-trust) for a longer treatment.
 
 ---
 
-## 
+## What is 1claw?
 
 ---
 title: What is 1claw?
@@ -483,7 +483,7 @@ Humans need to **create** vaults, **store** and **rotate** secrets, **register**
 
 ---
 
-## 
+## Audit and compliance
 
 ---
 title: Audit and compliance
@@ -519,7 +519,7 @@ Use the audit log for compliance reviews, incident response, and access analysis
 
 ---
 
-## 
+## Billing & Usage
 
 ---
 title: Billing & Usage
@@ -629,7 +629,7 @@ If the free tier is exhausted, the MCP server will return a clear error message:
 
 ---
 
-## 
+## Deploying Updates
 
 ---
 title: Deploying Updates
@@ -766,7 +766,7 @@ This is intentional — infrastructure changes should be reviewed before applyin
 
 ---
 
-## 
+## Email Notifications
 
 ---
 title: Email Notifications
@@ -780,23 +780,23 @@ sidebar_position: 9
 
 ## Notification events
 
-| Event | Recipient | When |
-|-------|-----------|------|
-| **Welcome** | New user | Account created via email/password signup or Google OAuth |
-| **Secret shared** | Share recipient | A secret is shared with them via email (`external_email` share) |
-| **Shared secret accessed** | Share creator | Someone accesses a secret the user shared |
-| **Password changed** | User | Password is successfully changed |
-| **API key created** | User | A new personal API key is created on their account |
+| Event                      | Recipient       | When                                                            |
+| -------------------------- | --------------- | --------------------------------------------------------------- |
+| **Welcome**                | New user        | Account created via email/password signup or Google OAuth       |
+| **Secret shared**          | Share recipient | A secret is shared with them via email (`external_email` share) |
+| **Shared secret accessed** | Share creator   | Someone accesses a secret the user shared                       |
+| **Password changed**       | User            | Password is successfully changed                                |
+| **API key created**        | User            | A new personal API key is created on their account              |
 
 ## Configuration
 
 Email sending requires a Resend API key. Set these environment variables on the vault server:
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `RESEND_API_KEY` | Yes | — | Your Resend API key (`re_...`) |
-| `ONECLAW_EMAIL_FROM` | No | `1Claw <noreply@1claw.xyz>` | Sender address |
-| `ONECLAW_PUBLIC_URL` | No | `https://1claw.xyz` | Base URL for links in emails |
+| Variable             | Required | Default                     | Description                    |
+| -------------------- | -------- | --------------------------- | ------------------------------ |
+| `RESEND_API_KEY`     | Yes      | —                           | Your Resend API key (`re_...`) |
+| `ONECLAW_EMAIL_FROM` | No       | `1Claw <noreply@1claw.xyz>` | Sender address                 |
+| `ONECLAW_PUBLIC_URL` | No       | `https://1claw.xyz`         | Base URL for links in emails   |
 
 If `RESEND_API_KEY` is not set, email sending is silently skipped and a log message is emitted instead. This is useful for local development.
 
@@ -821,7 +821,7 @@ All emails use inline CSS for maximum email client compatibility. They follow a 
 
 ---
 
-## 
+## Give an agent access
 
 ---
 title: Give an agent access
@@ -914,7 +914,7 @@ To revoke: delete the policy or deactivate the agent. To rotate: create a new se
 
 ---
 
-## 
+## MCP Integration
 
 ---
 title: MCP integration
@@ -1011,7 +1011,7 @@ cd packages/mcp && pnpm install && pnpm run build
 
 ---
 
-## 
+## Revoking access
 
 ---
 title: Revoking access
@@ -1044,7 +1044,7 @@ Returns a new API key; the old one stops working. Use this to invalidate a leake
 
 ---
 
-## 
+## Rotating secrets
 
 ---
 title: Rotating secrets
@@ -1075,7 +1075,7 @@ To rotate an **agent API key**, use **POST /v1/agents/:agent_id/rotate-key**. Th
 
 ---
 
-## 
+## Scoped permissions
 
 ---
 title: Scoped permissions
@@ -1113,7 +1113,7 @@ secret_path_pattern `api-keys/*`, permissions `["read"]`. The agent cannot write
 
 ---
 
-## 
+## Sharing Secrets
 
 ---
 title: Sharing Secrets
@@ -1127,12 +1127,12 @@ sidebar_position: 4
 
 ## Share types
 
-| `recipient_type` | Description |
-|-------------------|-------------|
-| `user` | Direct share to an existing 1Claw user by ID |
-| `agent` | Direct share to a registered agent by ID |
-| `external_email` | Invite-by-email — the recipient doesn't need an account yet |
-| `anyone_with_link` | Anyone with the share URL can access |
+| `recipient_type`   | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| `user`             | Direct share to an existing 1Claw user by ID                |
+| `agent`            | Direct share to a registered agent by ID                    |
+| `external_email`   | Invite-by-email — the recipient doesn't need an account yet |
+| `anyone_with_link` | Anyone with the share URL can access                        |
 
 ## Create a share
 
@@ -1152,12 +1152,12 @@ curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
 
 ```json
 {
-  "id": "uuid",
-  "share_url": "https://api.1claw.xyz/v1/share/uuid",
-  "recipient_type": "external_email",
-  "recipient_email": "colleague@example.com",
-  "expires_at": "2026-03-15T00:00:00Z",
-  "max_access_count": 5
+    "id": "uuid",
+    "share_url": "https://api.1claw.xyz/v1/share/uuid",
+    "recipient_type": "external_email",
+    "recipient_email": "colleague@example.com",
+    "expires_at": "2026-03-15T00:00:00Z",
+    "max_access_count": 5
 }
 ```
 
@@ -1194,14 +1194,17 @@ curl -X DELETE https://api.1claw.xyz/v1/share/{share_id} \
 ```ts
 import { createClient } from "@1claw/sdk";
 
-const client = createClient({ baseUrl: "https://api.1claw.xyz", apiKey: "..." });
+const client = createClient({
+    baseUrl: "https://api.1claw.xyz",
+    apiKey: "...",
+});
 
 // Share by email
 const share = await client.sharing.create(secretId, {
-  recipient_type: "external_email",
-  email: "colleague@example.com",
-  expires_at: "2026-03-15T00:00:00Z",
-  max_access_count: 5,
+    recipient_type: "external_email",
+    email: "colleague@example.com",
+    expires_at: "2026-03-15T00:00:00Z",
+    max_access_count: 5,
 });
 
 // Access a share
@@ -1228,7 +1231,7 @@ See [Email Notifications](/docs/guides/email-notifications) for the full list of
 
 ---
 
-## 
+## Deactivate agent / Rotate key
 
 ---
 title: Deactivate agent / Rotate key
@@ -1275,7 +1278,7 @@ curl -X POST "https://api.1claw.xyz/v1/agents/ec7e0226-30f0-4dda-b169-f060a35026
 
 ---
 
-## 
+## List agents
 
 ---
 title: List agents
@@ -1320,7 +1323,7 @@ curl -s "https://api.1claw.xyz/v1/agents" \
 
 ---
 
-## 
+## Register an agent
 
 ---
 title: Register an agent
@@ -1380,7 +1383,7 @@ Store the `api_key` securely; it cannot be retrieved again. Use [Deactivate agen
 
 ---
 
-## 
+## Authentication
 
 ---
 title: Authentication
@@ -1512,7 +1515,7 @@ All error bodies use the standard problem-details format (`type`, `title`, `stat
 
 ---
 
-## 
+## Human API errors
 
 ---
 title: Human API errors
@@ -1562,7 +1565,7 @@ See [Error codes reference](/docs/reference/error-codes) for a full list.
 
 ---
 
-## 
+## Create a policy (grant)
 
 ---
 title: Create a policy (grant)
@@ -1630,7 +1633,7 @@ curl -X POST "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c7
 
 ---
 
-## 
+## List policies (grants)
 
 ---
 title: List policies (grants)
@@ -1680,7 +1683,7 @@ curl -s "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/po
 
 ---
 
-## 
+## Revoke a policy (grant)
 
 ---
 title: Revoke a policy (grant)
@@ -1717,7 +1720,7 @@ curl -X DELETE "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies/897b37da-a265
 
 ---
 
-## 
+## Human API overview
 
 ---
 title: Human API overview
@@ -1746,28 +1749,28 @@ Authorization: Bearer <access_token>
 
 Ways to get an access token:
 
-| Method | Endpoint | Request body |
-|--------|----------|--------------|
-| **Signup** | `POST /v1/auth/signup` | `{ "email", "password", "display_name?" }` |
-| Email + password | `POST /v1/auth/token` | `{ "email", "password" }` |
-| Google OAuth | `POST /v1/auth/google` | `{ "id_token" }` |
-| Personal API key | `POST /v1/auth/api-key-token` | `{ "api_key" }` (e.g. `1ck_...`) |
+| Method           | Endpoint                      | Request body                               |
+| ---------------- | ----------------------------- | ------------------------------------------ |
+| **Signup**       | `POST /v1/auth/signup`        | `{ "email", "password", "display_name?" }` |
+| Email + password | `POST /v1/auth/token`         | `{ "email", "password" }`                  |
+| Google OAuth     | `POST /v1/auth/google`        | `{ "id_token" }`                           |
+| Personal API key | `POST /v1/auth/api-key-token` | `{ "api_key" }` (e.g. `1ck_...`)           |
 
 See [Authentication](/docs/human-api/authentication) for details and response shape.
 
 ## Main areas
 
-| Area | Endpoints | Purpose |
-|------|-----------|---------|
-| **Vaults** | POST/GET /v1/vaults, GET/DELETE /v1/vaults/:vault_id | Create, list, get, delete vaults |
-| **Secrets** | PUT/GET/DELETE /v1/vaults/:vault_id/secrets/:path, GET /v1/vaults/:vault_id/secrets | Store, read, list, delete secrets |
-| **Policies** | POST/GET /v1/vaults/:vault_id/policies, PUT/DELETE .../policies/:policy_id | Grant/revoke access to principals |
-| **Agents** | POST/GET /v1/agents, GET/PATCH/DELETE /v1/agents/:agent_id, POST .../rotate-key | Register agents, rotate keys |
-| **Sharing** | POST /v1/secrets/:secret_id/share, GET/DELETE /v1/share/:share_id | Share secrets by email or link ([guide](/docs/guides/sharing-secrets)) |
-| **Audit** | GET /v1/audit/events | Query audit events |
-| **Billing** | GET /v1/billing/usage, GET /v1/billing/history | Usage and history |
-| **Org** | GET /v1/org/members, PATCH/DELETE /v1/org/members/:user_id | Team members |
-| **API keys** | POST/GET /v1/auth/api-keys, DELETE /v1/auth/api-keys/:key_id | Personal API keys |
+| Area         | Endpoints                                                                           | Purpose                                                                |
+| ------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Vaults**   | POST/GET /v1/vaults, GET/DELETE /v1/vaults/:vault_id                                | Create, list, get, delete vaults                                       |
+| **Secrets**  | PUT/GET/DELETE /v1/vaults/:vault_id/secrets/:path, GET /v1/vaults/:vault_id/secrets | Store, read, list, delete secrets                                      |
+| **Policies** | POST/GET /v1/vaults/:vault_id/policies, PUT/DELETE .../policies/:policy_id          | Grant/revoke access to principals                                      |
+| **Agents**   | POST/GET /v1/agents, GET/PATCH/DELETE /v1/agents/:agent_id, POST .../rotate-key     | Register agents, rotate keys                                           |
+| **Sharing**  | POST /v1/secrets/:secret_id/share, GET/DELETE /v1/share/:share_id                   | Share secrets by email or link ([guide](/docs/guides/sharing-secrets)) |
+| **Audit**    | GET /v1/audit/events                                                                | Query audit events                                                     |
+| **Billing**  | GET /v1/billing/usage, GET /v1/billing/history                                      | Usage and history                                                      |
+| **Org**      | GET /v1/org/members, PATCH/DELETE /v1/org/members/:user_id                          | Team members                                                           |
+| **API keys** | POST/GET /v1/auth/api-keys, DELETE /v1/auth/api-keys/:key_id                        | Personal API keys                                                      |
 
 ## Response and errors
 
@@ -1782,7 +1785,7 @@ See [Authentication](/docs/human-api/authentication) for details and response sh
 
 ---
 
-## 
+## Create or update a secret
 
 ---
 title: Create or update a secret
@@ -1860,7 +1863,7 @@ All error bodies use RFC 7807 problem-details (`type`, `title`, `status`, `detai
 
 ---
 
-## 
+## Delete a secret
 
 ---
 title: Delete a secret
@@ -1899,7 +1902,7 @@ After deletion, `GET .../secrets/:path` for that path returns **410 Gone**.
 
 ---
 
-## 
+## Read a secret
 
 ---
 title: Read a secret
@@ -1956,7 +1959,7 @@ Treat the `value` field as highly sensitive; do not log or persist it unnecessar
 
 ---
 
-## 
+## Rotate a secret
 
 ---
 title: Rotate a secret
@@ -1993,7 +1996,7 @@ If the server responds with **400** and a message like "Secret rotation not yet 
 
 ---
 
-## 
+## Update a secret (new version)
 
 ---
 title: Update a secret (new version)
@@ -2031,7 +2034,7 @@ To read a **specific** version, use the versioned endpoint if your deployment su
 
 ---
 
-## 
+## Introduction
 
 ---
 title: Introduction
@@ -2077,10 +2080,10 @@ AI agents often need secrets (API keys, tokens, DB credentials) to call external
 
 The same REST API serves both personas:
 
-| Persona | Auth | Typical operations |
-|--------|------|---------------------|
+| Persona   | Auth                                                      | Typical operations                                                                       |
+| --------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **Human** | Email/password or Google → JWT; or personal API key → JWT | Create vaults, PUT/GET/DELETE secrets, create/list policies, register agents, audit logs |
-| **Agent** | Agent API key → JWT via `/v1/auth/agent-token` | GET secret by path, list secrets in a vault (subject to policies) |
+| **Agent** | Agent API key → JWT via `/v1/auth/agent-token`            | GET secret by path, list secrets in a vault (subject to policies)                        |
 
 Base URL: `https://api.1claw.xyz` (or your Cloud Run URL). The dashboard at [1claw.xyz](https://1claw.xyz) proxies `/api/v1/*` to the same API.
 
@@ -2106,7 +2109,7 @@ Base URL: `https://api.1claw.xyz` (or your Cloud Run URL). The dashboard at [1cl
 
 ---
 
-## 
+## MCP Deployment
 
 ---
 title: MCP Deployment
@@ -2181,7 +2184,7 @@ Note: In hosted mode, auth credentials come from client request headers (`Author
 
 ---
 
-## 
+## MCP Server
 
 ---
 title: MCP Server Overview
@@ -2220,31 +2223,31 @@ Secrets are fetched at runtime and never persisted in the LLM context window bey
 
 ## Transport modes
 
-| Mode | Use case | Auth | URL |
-|------|----------|------|-----|
-| **stdio** | Local — Claude Desktop, Cursor, any MCP client | Env vars | N/A (runs locally) |
+| Mode           | Use case                                            | Auth                | URL                         |
+| -------------- | --------------------------------------------------- | ------------------- | --------------------------- |
+| **stdio**      | Local — Claude Desktop, Cursor, any MCP client      | Env vars            | N/A (runs locally)          |
 | **httpStream** | Hosted — any MCP client with HTTP streaming support | Per-request headers | `https://mcp.1claw.xyz/mcp` |
 
 ## Tools
 
-| Tool | Description | Read/Write |
-|------|-------------|------------|
-| `list_secrets` | List all secrets in the vault (metadata only, never values) | Read |
-| `get_secret` | Fetch the decrypted value of a secret by path | Read |
-| `put_secret` | Create or update a secret (creates a new version) | Write |
-| `delete_secret` | Soft-delete a secret at a given path | Write |
-| `describe_secret` | Get metadata (type, version, expiry) without fetching the value | Read |
-| `rotate_and_store` | Store a new value for an existing secret and return the new version | Write |
-| `get_env_bundle` | Fetch an `env_bundle` secret and parse its KEY=VALUE lines as JSON | Read |
-| `create_vault` | Create a new vault | Write |
-| `list_vaults` | List all accessible vaults | Read |
-| `grant_access` | Grant a user or agent access to a vault | Write |
-| `share_secret` | Share a secret with someone by email | Write |
+| Tool               | Description                                                         | Read/Write |
+| ------------------ | ------------------------------------------------------------------- | ---------- |
+| `list_secrets`     | List all secrets in the vault (metadata only, never values)         | Read       |
+| `get_secret`       | Fetch the decrypted value of a secret by path                       | Read       |
+| `put_secret`       | Create or update a secret (creates a new version)                   | Write      |
+| `delete_secret`    | Soft-delete a secret at a given path                                | Write      |
+| `describe_secret`  | Get metadata (type, version, expiry) without fetching the value     | Read       |
+| `rotate_and_store` | Store a new value for an existing secret and return the new version | Write      |
+| `get_env_bundle`   | Fetch an `env_bundle` secret and parse its KEY=VALUE lines as JSON  | Read       |
+| `create_vault`     | Create a new vault                                                  | Write      |
+| `list_vaults`      | List all accessible vaults                                          | Read       |
+| `grant_access`     | Grant a user or agent access to a vault                             | Write      |
+| `share_secret`     | Share a secret with someone by email                                | Write      |
 
 ## Resources
 
-| URI | Description |
-|-----|-------------|
+| URI               | Description                                                      |
+| ----------------- | ---------------------------------------------------------------- |
 | `vault://secrets` | Browsable listing of all secret paths (metadata only, no values) |
 
 ## Next steps
@@ -2257,7 +2260,7 @@ Secrets are fetched at runtime and never persisted in the LLM context window bey
 
 ---
 
-## 
+## MCP Security
 
 ---
 title: MCP Security
@@ -2359,7 +2362,7 @@ The MCP server translates vault API errors into clear, actionable messages:
 
 ---
 
-## 
+## Setup Guide
 
 ---
 title: MCP Setup Guide
@@ -2507,7 +2510,7 @@ pnpm inspect
 
 ---
 
-## 
+## Tool Reference
 
 ---
 title: MCP Tool Reference
@@ -2523,9 +2526,9 @@ List all secrets stored in the vault. Returns paths, types, versions, and metada
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `prefix` | string | No | Filter secrets by path prefix (e.g. `api-keys/`) |
+| Name     | Type   | Required | Description                                      |
+| -------- | ------ | -------- | ------------------------------------------------ |
+| `prefix` | string | No       | Filter secrets by path prefix (e.g. `api-keys/`) |
 
 ### Example
 
@@ -2547,9 +2550,9 @@ Fetch the decrypted value of a secret by its path. Use this immediately before m
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `path` | string | Yes | Secret path (e.g. `api-keys/stripe`) |
+| Name   | Type   | Required | Description                          |
+| ------ | ------ | -------- | ------------------------------------ |
+| `path` | string | Yes      | Secret path (e.g. `api-keys/stripe`) |
 
 ### Example
 
@@ -2562,11 +2565,11 @@ Agent: "I need the Stripe API key"
 
 ### Errors
 
-| Status | Meaning |
-|--------|---------|
-| 404 | No secret found at this path |
-| 410 | Secret is expired or has exceeded its maximum access count |
-| 402 | Free tier quota exhausted — upgrade at 1claw.xyz/settings/billing |
+| Status | Meaning                                                           |
+| ------ | ----------------------------------------------------------------- |
+| 404    | No secret found at this path                                      |
+| 410    | Secret is expired or has exceeded its maximum access count        |
+| 402    | Free tier quota exhausted — upgrade at 1claw.xyz/settings/billing |
 
 ---
 
@@ -2576,14 +2579,14 @@ Create a new secret or update an existing one. Each call creates a new version.
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `path` | string | Yes | Secret path (e.g. `api-keys/stripe`) |
-| `value` | string | Yes | The secret value to store |
-| `type` | string | No | Secret type. Default: `api_key`. Options: `api_key`, `password`, `private_key`, `certificate`, `file`, `note`, `ssh_key`, `env_bundle` |
-| `metadata` | object | No | Arbitrary JSON metadata to attach |
-| `expires_at` | string | No | ISO 8601 expiry datetime |
-| `max_access_count` | number | No | Auto-expire after this many reads |
+| Name               | Type   | Required | Description                                                                                                                            |
+| ------------------ | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`             | string | Yes      | Secret path (e.g. `api-keys/stripe`)                                                                                                   |
+| `value`            | string | Yes      | The secret value to store                                                                                                              |
+| `type`             | string | No       | Secret type. Default: `api_key`. Options: `api_key`, `password`, `private_key`, `certificate`, `file`, `note`, `ssh_key`, `env_bundle` |
+| `metadata`         | object | No       | Arbitrary JSON metadata to attach                                                                                                      |
+| `expires_at`       | string | No       | ISO 8601 expiry datetime                                                                                                               |
+| `max_access_count` | number | No       | Auto-expire after this many reads                                                                                                      |
 
 ### Example
 
@@ -2602,9 +2605,9 @@ Soft-delete a secret. All versions are marked as deleted. This is reversible by 
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `path` | string | Yes | Secret path to delete |
+| Name   | Type   | Required | Description           |
+| ------ | ------ | -------- | --------------------- |
+| `path` | string | Yes      | Secret path to delete |
 
 ### Example
 
@@ -2623,9 +2626,9 @@ Get metadata for a secret without fetching its value. Use this to check if a sec
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `path` | string | Yes | Secret path to describe |
+| Name   | Type   | Required | Description             |
+| ------ | ------ | -------- | ----------------------- |
+| `path` | string | Yes      | Secret path to describe |
 
 ### Example
 
@@ -2651,10 +2654,10 @@ Store a new value for an existing secret, creating a new version. Useful when an
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `path` | string | Yes | Secret path to rotate |
-| `value` | string | Yes | The new secret value |
+| Name    | Type   | Required | Description           |
+| ------- | ------ | -------- | --------------------- |
+| `path`  | string | Yes      | Secret path to rotate |
+| `value` | string | Yes      | The new secret value  |
 
 ### Example
 
@@ -2673,9 +2676,9 @@ Fetch a secret of type `env_bundle`, parse its `KEY=VALUE` lines, and return a s
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `path` | string | Yes | Path to an `env_bundle` secret |
+| Name   | Type   | Required | Description                    |
+| ------ | ------ | -------- | ------------------------------ |
+| `path` | string | Yes      | Path to an `env_bundle` secret |
 
 ### Example
 
@@ -2700,10 +2703,10 @@ Create a new vault for organizing secrets.
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | string | Yes | Vault name |
-| `description` | string | No | Description of the vault's purpose |
+| Name          | Type   | Required | Description                        |
+| ------------- | ------ | -------- | ---------------------------------- |
+| `name`        | string | Yes      | Vault name                         |
+| `description` | string | No       | Description of the vault's purpose |
 
 ### Example
 
@@ -2743,13 +2746,13 @@ Grant a user or agent access to a vault by creating an access policy.
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `vault_id` | string | Yes | UUID of the vault |
-| `principal_type` | string | Yes | `user` or `agent` |
-| `principal_id` | string | Yes | UUID of the user or agent |
-| `permissions` | string[] | No | Array of permissions: `read`, `write`, `delete` (default: `["read"]`) |
-| `secret_path_pattern` | string | No | Glob pattern to restrict access (default: `**` — all secrets) |
+| Name                  | Type     | Required | Description                                                           |
+| --------------------- | -------- | -------- | --------------------------------------------------------------------- |
+| `vault_id`            | string   | Yes      | UUID of the vault                                                     |
+| `principal_type`      | string   | Yes      | `user` or `agent`                                                     |
+| `principal_id`        | string   | Yes      | UUID of the user or agent                                             |
+| `permissions`         | string[] | No       | Array of permissions: `read`, `write`, `delete` (default: `["read"]`) |
+| `secret_path_pattern` | string   | No       | Glob pattern to restrict access (default: `**` — all secrets)         |
 
 ### Example
 
@@ -2768,12 +2771,12 @@ Share a secret with someone via email. The recipient doesn't need a 1Claw accoun
 
 ### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `secret_id` | string | Yes | UUID of the secret to share |
-| `email` | string | Yes | Recipient's email address |
-| `expires_at` | string | Yes | ISO 8601 expiry datetime (e.g. `2026-03-01T00:00:00Z`) |
-| `max_access_count` | number | No | Maximum number of times the share can be accessed (default: 5) |
+| Name               | Type   | Required | Description                                                    |
+| ------------------ | ------ | -------- | -------------------------------------------------------------- |
+| `secret_id`        | string | Yes      | UUID of the secret to share                                    |
+| `email`            | string | Yes      | Recipient's email address                                      |
+| `expires_at`       | string | Yes      | ISO 8601 expiry datetime (e.g. `2026-03-01T00:00:00Z`)         |
+| `max_access_count` | number | No       | Maximum number of times the share can be accessed (default: 5) |
 
 ### Example
 
@@ -2788,7 +2791,7 @@ They'll receive an email and can access the secret after signing in.
 
 ---
 
-## 
+## Quickstart for agents
 
 ---
 title: Quickstart for agents
@@ -2867,7 +2870,7 @@ If the agent has no read permission for that path, or the secret is expired/dele
 
 ---
 
-## 
+## Quickstart for humans
 
 ---
 title: Quickstart for humans
@@ -2987,11 +2990,810 @@ Returns `{ "secrets": [ ... ] }` with id, path, type, version, metadata, created
 
 ---
 
-## 
+## Quickstart
+
+---
+title: Quickstart
+description: Get started with 1claw in minutes — choose your path below.
+slug: /quickstart
+---
+
+# Quickstart
+
+Get from zero to a stored (or fetched) secret in a few minutes. Choose the guide that matches your role:
+
+## For humans
+
+You own the secrets. Sign up, create a vault, store a secret, and read it back.
+
+**You will learn to:**
+
+- Obtain a JWT via email/password or Google
+- Create a vault
+- Store and retrieve a secret
+
+[Start the human quickstart &rarr;](/docs/quickstart/humans)
+
+## For agents
+
+An agent accesses secrets that a human has shared. Exchange an API key for a JWT, then list and fetch secrets.
+
+**You will learn to:**
+
+- Exchange an agent API key for a short-lived JWT
+- List accessible secrets
+- Fetch a decrypted secret value
+
+[Start the agent quickstart &rarr;](/docs/quickstart/agents)
+
+## Prerequisites
+
+| Requirement | Details |
+|---|---|
+| **Account** | Sign up at [1claw.xyz](https://1claw.xyz) (free tier: 1,000 requests/month) |
+| **curl** | All examples use `curl`; any HTTP client works |
+| **Base URL** | `https://api.1claw.xyz` |
+
+
+---
+
+## API & MCP Testing
+
+---
+title: API & MCP Testing
+description: Complete guide to testing the 1claw API and MCP server using curl, including every endpoint group with working examples.
+sidebar_position: 1
+---
+
+# API & MCP Testing
+
+This page provides ready-to-run `curl` commands for every area of the 1claw API and MCP server. Use these to verify your deployment, debug integrations, or explore the API interactively.
+
+## Setup
+
+Set these environment variables before running the examples:
+
+```bash
+export API="https://api.1claw.xyz"
+```
+
+---
+
+## 1. Health checks (no auth required)
+
+```bash
+# Service health
+curl -s "$API/v1/health" | python3 -m json.tool
+
+# HSM connectivity
+curl -s "$API/v1/health/hsm" | python3 -m json.tool
+```
+
+Expected: `{ "status": "ok" }` for both.
+
+---
+
+## 2. Authentication
+
+### Sign up (new account)
+
+```bash
+curl -s -X POST "$API/v1/auth/signup" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"YourSecurePassword123!"}' \
+  | python3 -m json.tool
+```
+
+### Email/password login
+
+```bash
+curl -s -X POST "$API/v1/auth/token" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"YourSecurePassword123!"}' \
+  | python3 -m json.tool
+```
+
+Save the `access_token`:
+
+```bash
+export TOKEN=$(curl -s -X POST "$API/v1/auth/token" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"your-password"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+```
+
+### Google OAuth login
+
+```bash
+curl -s -X POST "$API/v1/auth/google" \
+  -H "Content-Type: application/json" \
+  -d '{"id_token":"<google-id-token>"}' \
+  | python3 -m json.tool
+```
+
+### Refresh token
+
+```bash
+curl -s -X POST "$API/v1/auth/refresh" \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"<refresh_token>"}' \
+  | python3 -m json.tool
+```
+
+### Revoke token
+
+```bash
+curl -s -X DELETE "$API/v1/auth/token" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Change password
+
+```bash
+curl -s -X POST "$API/v1/auth/change-password" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"current_password":"old","new_password":"new"}' \
+  | python3 -m json.tool
+```
+
+---
+
+## 3. Personal API Keys
+
+```bash
+# Create an API key
+curl -s -X POST "$API/v1/auth/api-keys" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-ci-key"}' \
+  | python3 -m json.tool
+
+# List API keys
+curl -s "$API/v1/auth/api-keys" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Exchange API key for JWT
+curl -s -X POST "$API/v1/auth/api-key-token" \
+  -H "Content-Type: application/json" \
+  -d '{"api_key":"1claw_..."}' \
+  | python3 -m json.tool
+
+# Revoke an API key
+curl -s -X DELETE "$API/v1/auth/api-keys/<key_id>" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 4. Vaults
+
+```bash
+# Create vault
+curl -s -X POST "$API/v1/vaults" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"test-vault","description":"Testing"}' \
+  | python3 -m json.tool
+
+# List vaults
+curl -s "$API/v1/vaults" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Get a specific vault
+export VAULT_ID="<vault-id-from-create>"
+curl -s "$API/v1/vaults/$VAULT_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Delete vault
+curl -s -X DELETE "$API/v1/vaults/$VAULT_ID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 5. Secrets
+
+```bash
+# Store a secret (PUT creates or updates)
+curl -s -X PUT "$API/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "api_key",
+    "value": "sk-proj-test123",
+    "metadata": {"env": "test"}
+  }' \
+  | python3 -m json.tool
+
+# List secrets (metadata only, no values)
+curl -s "$API/v1/vaults/$VAULT_ID/secrets" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Get secret value (decrypted)
+curl -s "$API/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Store a nested-path secret
+curl -s -X PUT "$API/v1/vaults/$VAULT_ID/secrets/config/prod/database" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"password","value":"postgres://..."}' \
+  | python3 -m json.tool
+
+# Delete a secret
+curl -s -X DELETE "$API/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 6. Policies
+
+Policies control which agents (or users) can access which secrets.
+
+```bash
+# Create a policy granting an agent read access
+curl -s -X POST "$API/v1/vaults/$VAULT_ID/policies" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "secret_path_pattern": "api-keys/**",
+    "principal_type": "agent",
+    "principal_id": "<agent-uuid>",
+    "permissions": ["read"]
+  }' \
+  | python3 -m json.tool
+
+# List policies for a vault
+curl -s "$API/v1/vaults/$VAULT_ID/policies" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Update a policy
+curl -s -X PUT "$API/v1/vaults/$VAULT_ID/policies/<policy_id>" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "permissions": ["read", "write"]
+  }' \
+  | python3 -m json.tool
+
+# Delete a policy
+curl -s -X DELETE "$API/v1/vaults/$VAULT_ID/policies/<policy_id>" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 7. Agents
+
+```bash
+# Register an agent
+curl -s -X POST "$API/v1/agents" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "test-agent",
+    "description": "A test agent",
+    "crypto_proxy_enabled": false
+  }' \
+  | python3 -m json.tool
+# Save the returned agent_id and api_key (ocv_...)
+
+# List agents
+curl -s "$API/v1/agents" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Get a single agent
+export AGENT_ID="<agent-id>"
+curl -s "$API/v1/agents/$AGENT_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Update agent
+curl -s -X PATCH "$API/v1/agents/$AGENT_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"renamed-agent","crypto_proxy_enabled":true}' \
+  | python3 -m json.tool
+
+# Rotate agent API key
+curl -s -X POST "$API/v1/agents/$AGENT_ID/rotate-key" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Delete (deactivate) agent
+curl -s -X DELETE "$API/v1/agents/$AGENT_ID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Agent authentication
+
+```bash
+# Exchange agent API key for JWT
+curl -s -X POST "$API/v1/auth/agent-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "<agent-uuid>",
+    "api_key": "ocv_..."
+  }' \
+  | python3 -m json.tool
+
+# Use the agent token to fetch secrets
+export AGENT_TOKEN="<agent-access-token>"
+curl -s "$API/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  | python3 -m json.tool
+```
+
+---
+
+## 8. Sharing
+
+```bash
+# Create a share (by secret ID, with email invite)
+curl -s -X POST "$API/v1/secrets/<secret_id>/share" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_email": "colleague@example.com",
+    "expires_at": "2026-03-01T00:00:00Z",
+    "max_access_count": 5
+  }' \
+  | python3 -m json.tool
+
+# List shares you created
+curl -s "$API/v1/shares/outbound" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# List shares sent to you
+curl -s "$API/v1/shares/inbound" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Accept an inbound share
+curl -s -X POST "$API/v1/shares/<share_id>/accept" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Decline an inbound share
+curl -s -X POST "$API/v1/shares/<share_id>/decline" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Access shared secret (public, no auth — uses share link)
+curl -s "$API/v1/share/<share_id>" \
+  | python3 -m json.tool
+
+# Revoke a share
+curl -s -X DELETE "$API/v1/share/<share_id>" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 9. Chains
+
+```bash
+# List all supported chains
+curl -s "$API/v1/chains" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Get a specific chain (by ID or chain_id)
+curl -s "$API/v1/chains/1" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+```
+
+---
+
+## 10. Transactions (Crypto Proxy)
+
+The agent must have `crypto_proxy_enabled: true`. Use the agent's JWT.
+
+```bash
+# Submit a transaction
+curl -s -X POST "$API/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain_id": 1,
+    "to": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18",
+    "value": "0x0",
+    "data": "0x"
+  }' \
+  | python3 -m json.tool
+
+# List transactions for an agent
+curl -s "$API/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  | python3 -m json.tool
+
+# Get a specific transaction
+curl -s "$API/v1/agents/$AGENT_ID/transactions/<tx_id>" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  | python3 -m json.tool
+```
+
+---
+
+## 11. Billing & Usage
+
+```bash
+# Usage summary
+curl -s "$API/v1/billing/usage" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Usage history
+curl -s "$API/v1/billing/history" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+```
+
+---
+
+## 12. Audit log
+
+```bash
+# Query audit events (recent)
+curl -s "$API/v1/audit/events" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# With query parameters
+curl -s "$API/v1/audit/events?limit=10&action=secret.read" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+```
+
+---
+
+## 13. Organization
+
+```bash
+# List org members
+curl -s "$API/v1/org/members" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Invite a member
+curl -s -X POST "$API/v1/org/invite" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"newmember@example.com","role":"member"}' \
+  | python3 -m json.tool
+
+# Update member role
+curl -s -X PATCH "$API/v1/org/members/<user_id>" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"role":"admin"}' \
+  | python3 -m json.tool
+
+# Remove member
+curl -s -X DELETE "$API/v1/org/members/<user_id>" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 14. Security (IP rules)
+
+```bash
+# List IP rules
+curl -s "$API/v1/security/ip-rules" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Create an allow rule
+curl -s -X POST "$API/v1/security/ip-rules" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"cidr":"203.0.113.0/24","rule_type":"allow","description":"Office network"}' \
+  | python3 -m json.tool
+
+# Create a block rule
+curl -s -X POST "$API/v1/security/ip-rules" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"cidr":"198.51.100.5/32","rule_type":"block","description":"Suspicious IP"}' \
+  | python3 -m json.tool
+
+# Delete an IP rule
+curl -s -X DELETE "$API/v1/security/ip-rules/<rule_id>" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 15. Admin endpoints
+
+These require admin/super-admin privileges.
+
+```bash
+# List all settings
+curl -s "$API/v1/admin/settings" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Update a setting
+curl -s -X PUT "$API/v1/admin/settings/maintenance_mode" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"value":"false"}' \
+  | python3 -m json.tool
+
+# Get x402 payment configuration
+curl -s "$API/v1/admin/x402" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Update x402 config
+curl -s -X PUT "$API/v1/admin/x402" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "facilitator_url": "https://api.cdp.coinbase.com/platform/v2/x402",
+    "payment_address": "0x...",
+    "network": "base-sepolia"
+  }' \
+  | python3 -m json.tool
+
+# List all users
+curl -s "$API/v1/admin/users" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+# Manage chains (admin)
+curl -s "$API/v1/admin/chains" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+
+curl -s -X POST "$API/v1/admin/chains" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Polygon",
+    "chain_id": 137,
+    "rpc_url": "https://polygon-rpc.com",
+    "explorer_url": "https://polygonscan.com",
+    "is_testnet": false,
+    "is_enabled": true
+  }' \
+  | python3 -m json.tool
+
+# Get/update org limits
+curl -s "$API/v1/admin/orgs/<org_id>/limits" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -m json.tool
+```
+
+---
+
+## 16. MCP Server Testing
+
+The MCP server runs as a stdio process. You can test it with `npx`:
+
+### Install and configure
+
+```bash
+npm install -g @1claw/mcp
+```
+
+Or add to your MCP client configuration (e.g. Claude Desktop, Cursor):
+
+```json
+{
+  "mcpServers": {
+    "1claw": {
+      "command": "npx",
+      "args": ["-y", "@1claw/mcp"],
+      "env": {
+        "ONECLAW_API_URL": "https://api.1claw.xyz",
+        "ONECLAW_AGENT_ID": "<agent-uuid>",
+        "ONECLAW_API_KEY": "ocv_..."
+      }
+    }
+  }
+}
+```
+
+### Test MCP tools via curl (HTTP wrapper)
+
+If you run the MCP server with an HTTP transport (e.g. via `mcp-proxy` or SSE), you can test tools directly:
+
+```bash
+export MCP="http://localhost:3001"
+
+# List vaults
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "list_vaults",
+      "arguments": {}
+    }
+  }' | python3 -m json.tool
+
+# List secrets
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "list_secrets",
+      "arguments": {"prefix": "api-keys/"}
+    }
+  }' | python3 -m json.tool
+
+# Get a secret
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "get_secret",
+      "arguments": {"path": "api-keys/openai"}
+    }
+  }' | python3 -m json.tool
+
+# Store a secret
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "put_secret",
+      "arguments": {
+        "path": "api-keys/new-key",
+        "value": "sk-test-123",
+        "type": "api_key"
+      }
+    }
+  }' | python3 -m json.tool
+
+# Describe a secret (metadata only)
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tools/call",
+    "params": {
+      "name": "describe_secret",
+      "arguments": {"path": "api-keys/openai"}
+    }
+  }' | python3 -m json.tool
+
+# Rotate a secret
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tools/call",
+    "params": {
+      "name": "rotate_and_store",
+      "arguments": {
+        "path": "api-keys/openai",
+        "value": "sk-new-rotated-value"
+      }
+    }
+  }' | python3 -m json.tool
+
+# Get env bundle
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tools/call",
+    "params": {
+      "name": "get_env_bundle",
+      "arguments": {"path": "config/prod-env"}
+    }
+  }' | python3 -m json.tool
+
+# Create vault
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "tools/call",
+    "params": {
+      "name": "create_vault",
+      "arguments": {"name": "test-vault", "description": "Created via MCP"}
+    }
+  }' | python3 -m json.tool
+
+# Grant access
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "tools/call",
+    "params": {
+      "name": "grant_access",
+      "arguments": {
+        "vault_id": "<vault-uuid>",
+        "principal_type": "agent",
+        "principal_id": "<agent-uuid>",
+        "permissions": ["read"]
+      }
+    }
+  }' | python3 -m json.tool
+
+# Share a secret
+curl -s -X POST "$MCP" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 10,
+    "method": "tools/call",
+    "params": {
+      "name": "share_secret",
+      "arguments": {
+        "secret_id": "<secret-uuid>",
+        "email": "colleague@example.com",
+        "expires_at": "2026-03-01T00:00:00Z",
+        "max_access_count": 5
+      }
+    }
+  }' | python3 -m json.tool
+```
+
+### Test MCP via stdio (interactive)
+
+For direct stdio testing, pipe JSON-RPC messages:
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | \
+  ONECLAW_API_URL=https://api.1claw.xyz \
+  ONECLAW_AGENT_ID=<agent-uuid> \
+  ONECLAW_API_KEY=ocv_... \
+  npx @1claw/mcp
+```
+
+---
+
+## Tips
+
+- **Pretty-print JSON**: Pipe any response through `python3 -m json.tool` or `jq`.
+- **Save tokens as variables**: Use the token-extraction one-liner from section 2.
+- **HTTP status codes**: Add `-w "\n%{http_code}\n"` to any curl command to see the status code.
+- **Verbose mode**: Add `-v` to see full request/response headers.
+- **x402 payment**: If an endpoint returns `402`, include a payment header as configured by your x402 setup.
+
+
+---
+
+## API reference
 
 ---
 title: API reference
-description: Full API reference is provided by the OpenAPI 3.1 spec in the repository; base URL and all v1 endpoints are listed here.
+description: Complete list of all v1 API endpoints for the 1claw vault, grouped by domain.
 sidebar_position: 0
 ---
 
@@ -3001,60 +3803,170 @@ The canonical API spec is the **OpenAPI 3.1** document shipped with the project.
 
 ## Base URL
 
-- **Production:** `https://api.1claw.xyz` (or your Cloud Run URL)
+- **Production:** `https://api.1claw.xyz`
 - **Dashboard proxy:** `https://1claw.xyz/api` (proxies to the same API)
 
 All endpoints are under **/v1**.
 
-## Endpoints summary
+---
 
-- **POST** `/v1/auth/signup` — Self-service signup (email + password) → JWT
-- **POST** `/v1/auth/token` — Email/password to JWT
-- **POST** `/v1/auth/agent-token` — Agent ID + API key to JWT
-- **POST** `/v1/auth/api-key-token` — Personal API key to JWT
-- **POST** `/v1/auth/google` — Google id_token to JWT
-- **POST** `/v1/auth/refresh` — Refresh token to JWT
-- **DELETE** `/v1/auth/token` — Revoke token
-- **POST** `/v1/auth/change-password` — Change password
-- **GET** `/v1/health` — Service health
-- **GET** `/v1/health/hsm` — HSM connectivity
-- **POST** `/v1/vaults` — Create vault
-- **GET** `/v1/vaults` — List vaults
-- **GET** `/v1/vaults/:vault_id` — Get vault
-- **DELETE** `/v1/vaults/:vault_id` — Delete vault
-- **GET** `/v1/vaults/:vault_id/secrets` — List secrets
-- **PUT** `/v1/vaults/:vault_id/secrets/:path` — Create/update secret (path is wildcard)
-- **GET** `/v1/vaults/:vault_id/secrets/:path` — Get secret value
-- **DELETE** `/v1/vaults/:vault_id/secrets/:path` — Delete secret
-- **POST** `/v1/vaults/:vault_id/policies` — Create policy
-- **GET** `/v1/vaults/:vault_id/policies` — List policies
-- **PUT** `/v1/vaults/:vault_id/policies/:policy_id` — Update policy
-- **DELETE** `/v1/vaults/:vault_id/policies/:policy_id` — Delete policy
-- **POST** `/v1/agents` — Register agent
-- **GET** `/v1/agents` — List agents
-- **GET** `/v1/agents/:agent_id` — Get agent
-- **PATCH** `/v1/agents/:agent_id` — Update agent
-- **DELETE** `/v1/agents/:agent_id` — Deactivate agent
-- **POST** `/v1/agents/:agent_id/rotate-key` — Rotate agent key
-- **POST** `/v1/secrets/:secret_id/share` — Create share link (supports email invites)
-- **GET** `/v1/share/:share_id` — Access shared secret (public, checks expiry + access count)
-- **DELETE** `/v1/share/:share_id` — Revoke share (creator only)
-- **GET** `/v1/billing/usage` — Usage summary
-- **GET** `/v1/billing/history` — Usage history
-- **GET** `/v1/audit/events` — Query audit events
-- **GET** `/v1/org/members` — List org members
-- **PATCH** `/v1/org/members/:user_id` — Update member role
-- **DELETE** `/v1/org/members/:user_id` — Remove member
-- **POST** `/v1/auth/api-keys` — Create API key
-- **GET** `/v1/auth/api-keys` — List API keys
-- **DELETE** `/v1/auth/api-keys/:key_id` — Revoke API key
+## Public (no auth)
 
-Note: The OpenAPI spec may use `username` for `/v1/auth/token`; the **actual** API expects `email` and `password`. See [Authentication](/docs/human-api/authentication).
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/health` | Service health |
+| GET | `/v1/health/hsm` | HSM connectivity |
+| GET | `/v1/share/:share_id` | Access a shared secret (checks expiry + access count) |
+
+## Authentication
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/auth/signup` | Self-service signup (email + password) → JWT |
+| POST | `/v1/auth/token` | Email/password → JWT |
+| POST | `/v1/auth/agent-token` | Agent ID + API key → JWT |
+| POST | `/v1/auth/api-key-token` | Personal API key → JWT |
+| POST | `/v1/auth/google` | Google id_token → JWT |
+| POST | `/v1/auth/refresh` | Refresh token → new JWT |
+| DELETE | `/v1/auth/token` | Revoke token |
+| POST | `/v1/auth/change-password` | Change password |
+
+## Personal API Keys
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/auth/api-keys` | Create API key |
+| GET | `/v1/auth/api-keys` | List API keys |
+| DELETE | `/v1/auth/api-keys/:key_id` | Revoke API key |
+
+## Vaults
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/vaults` | Create vault |
+| GET | `/v1/vaults` | List vaults |
+| GET | `/v1/vaults/:vault_id` | Get vault |
+| DELETE | `/v1/vaults/:vault_id` | Delete vault |
+
+## Secrets
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/vaults/:vault_id/secrets` | List secrets (metadata only) |
+| PUT | `/v1/vaults/:vault_id/secrets/*path` | Create or update secret |
+| GET | `/v1/vaults/:vault_id/secrets/*path` | Get secret value (decrypted) |
+| DELETE | `/v1/vaults/:vault_id/secrets/*path` | Soft-delete secret |
+
+## Policies
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/vaults/:vault_id/policies` | Create policy |
+| GET | `/v1/vaults/:vault_id/policies` | List policies |
+| PUT | `/v1/vaults/:vault_id/policies/:policy_id` | Update policy |
+| DELETE | `/v1/vaults/:vault_id/policies/:policy_id` | Delete policy |
+
+## Agents
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/agents` | Register agent |
+| GET | `/v1/agents` | List agents |
+| GET | `/v1/agents/:agent_id` | Get agent |
+| PATCH | `/v1/agents/:agent_id` | Update agent (name, description, crypto_proxy_enabled) |
+| DELETE | `/v1/agents/:agent_id` | Deactivate agent |
+| POST | `/v1/agents/:agent_id/rotate-key` | Rotate agent API key |
+
+## Sharing
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/secrets/:secret_id/share` | Create share (supports email invites) |
+| GET | `/v1/shares/outbound` | List shares you created |
+| GET | `/v1/shares/inbound` | List shares sent to you |
+| POST | `/v1/shares/:share_id/accept` | Accept an inbound share |
+| POST | `/v1/shares/:share_id/decline` | Decline an inbound share |
+| DELETE | `/v1/share/:share_id` | Revoke share (creator only) |
+
+## Chains
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/chains` | List supported blockchain chains |
+| GET | `/v1/chains/:identifier` | Get chain by ID or chain_id |
+
+## Transactions (Crypto Proxy)
+
+Requires `crypto_proxy_enabled: true` on the agent.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/agents/:agent_id/transactions` | Submit a transaction |
+| GET | `/v1/agents/:agent_id/transactions` | List agent transactions |
+| GET | `/v1/agents/:agent_id/transactions/:tx_id` | Get transaction details |
+
+## Billing & Usage
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/billing/usage` | Usage summary (current period) |
+| GET | `/v1/billing/history` | Usage history |
+
+## Audit
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/audit/events` | Query audit events |
+
+## Organization
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/org/members` | List org members |
+| POST | `/v1/org/invite` | Invite member by email |
+| PATCH | `/v1/org/members/:user_id` | Update member role |
+| DELETE | `/v1/org/members/:user_id` | Remove member |
+
+## Security (IP Rules)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/security/ip-rules` | List IP allow/block rules |
+| POST | `/v1/security/ip-rules` | Create IP rule |
+| DELETE | `/v1/security/ip-rules/:rule_id` | Delete IP rule |
+
+## Admin
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/admin/settings` | List all settings |
+| PUT | `/v1/admin/settings/:key` | Update a setting |
+| DELETE | `/v1/admin/settings/:key` | Delete a setting |
+| GET | `/v1/admin/x402` | Get x402 payment config |
+| PUT | `/v1/admin/x402` | Update x402 payment config |
+| GET | `/v1/admin/users` | List all users (super-admin) |
+| GET | `/v1/admin/chains` | List chains (admin view) |
+| POST | `/v1/admin/chains` | Create chain |
+| PUT | `/v1/admin/chains/:chain_id` | Update chain |
+| DELETE | `/v1/admin/chains/:chain_id` | Delete chain |
+| GET | `/v1/admin/orgs/:org_id/limits` | Get org limits |
+| PUT | `/v1/admin/orgs/:org_id/limits` | Update org limits |
+
+---
+
+## Notes
+
+- The API expects `email` and `password` for `/v1/auth/token` (not `username`).
+- Secret paths are wildcard routes — e.g. `api-keys/openai`, `config/prod/db`.
+- Middleware layers applied to authenticated routes: **auth → IP filter → usage tracking**.
+- Crypto proxy routes additionally require the `crypto_proxy_enabled` claim in the JWT.
+- The **x402 middleware** runs on all routes and can gate access behind payment for configured endpoints.
+- See [Authentication](/docs/human-api/authentication) for details on obtaining and refreshing JWTs.
 
 
 ---
 
-## 
+## Changelog
 
 ---
 title: Changelog
@@ -3171,7 +4083,7 @@ The **/v1** API is stable. Breaking changes would be accompanied by a new versio
 
 ---
 
-## 
+## Error codes
 
 ---
 title: Error codes
@@ -3212,7 +4124,7 @@ Use `status` for programmatic handling; use `detail` for user-facing messages (i
 
 ---
 
-## 
+## Rate limits
 
 ---
 title: Rate limits
@@ -3229,7 +4141,7 @@ Exact limits (requests per minute or per hour) depend on your deployment (e.g. C
 
 ---
 
-## 
+## curl examples
 
 ---
 title: curl examples
@@ -3311,7 +4223,7 @@ curl -s -X POST "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies" \
 
 ---
 
-## 
+## JavaScript / TypeScript SDK
 
 ---
 title: JavaScript / TypeScript SDK
@@ -3337,19 +4249,19 @@ npm install @1claw/sdk
 import { createClient } from "@1claw/sdk";
 
 const client = createClient({
-  baseUrl: "https://api.1claw.xyz",
-  apiKey: process.env.ONECLAW_API_KEY, // personal API key (1ck_...)
+    baseUrl: "https://api.1claw.xyz",
+    apiKey: process.env.ONECLAW_API_KEY, // personal API key (1ck_...)
 });
 
 // Create a vault
 const { data: vault } = await client.vault.create({
-  name: "my-vault",
-  description: "Production secrets",
+    name: "my-vault",
+    description: "Production secrets",
 });
 
 // Store a secret
 await client.secrets.set(vault.id, "STRIPE_KEY", "sk_live_...", {
-  type: "api_key",
+    type: "api_key",
 });
 
 // Retrieve a secret
@@ -3364,20 +4276,24 @@ The SDK supports three authentication methods:
 ```ts
 // 1. Personal API key (recommended for server-side)
 const client = createClient({
-  baseUrl: "https://api.1claw.xyz",
-  apiKey: "1ck_...",
+    baseUrl: "https://api.1claw.xyz",
+    apiKey: "1ck_...",
 });
 
 // 2. Agent credentials
 const client = createClient({
-  baseUrl: "https://api.1claw.xyz",
-  agentId: "uuid",
-  apiKey: "ocv_...",
+    baseUrl: "https://api.1claw.xyz",
+    agentId: "uuid",
+    apiKey: "ocv_...",
 });
 
 // 3. Manual auth (signup, email/password)
 const client = createClient({ baseUrl: "https://api.1claw.xyz" });
-await client.auth.signup({ email: "me@example.com", password: "...", display_name: "Me" });
+await client.auth.signup({
+    email: "me@example.com",
+    password: "...",
+    display_name: "Me",
+});
 // or
 await client.auth.login({ email: "me@example.com", password: "..." });
 ```
@@ -3386,20 +4302,20 @@ await client.auth.login({ email: "me@example.com", password: "..." });
 
 All API endpoints are organized into resource modules:
 
-| Module | Methods |
-|--------|---------|
-| `client.auth` | `login()`, `signup()`, `agentToken()`, `apiKeyToken()`, `google()`, `changePassword()`, `logout()` |
-| `client.vault` | `create()`, `list()`, `get()`, `delete()` |
-| `client.secrets` | `set()`, `get()`, `list()`, `delete()`, `rotate()` |
-| `client.access` | `grantHuman()`, `grantAgent()`, `update()`, `revoke()`, `listGrants()` |
-| `client.agents` | `create()`, `list()`, `get()`, `update()`, `delete()`, `rotateKey()` |
-| `client.sharing` | `create()`, `access()`, `revoke()` |
-| `client.approvals` | `request()`, `list()`, `approve()`, `deny()`, `check()` |
-| `client.apiKeys` | `create()`, `list()`, `revoke()` |
-| `client.billing` | `usage()`, `history()` |
-| `client.audit` | `query()` |
-| `client.org` | `listMembers()`, `updateMemberRole()`, `removeMember()` |
-| `client.x402` | `getPaymentRequirement()`, `pay()`, `verifyReceipt()`, `withPayment()` |
+| Module             | Methods                                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| `client.auth`      | `login()`, `signup()`, `agentToken()`, `apiKeyToken()`, `google()`, `changePassword()`, `logout()` |
+| `client.vault`     | `create()`, `list()`, `get()`, `delete()`                                                          |
+| `client.secrets`   | `set()`, `get()`, `list()`, `delete()`, `rotate()`                                                 |
+| `client.access`    | `grantHuman()`, `grantAgent()`, `update()`, `revoke()`, `listGrants()`                             |
+| `client.agents`    | `create()`, `list()`, `get()`, `update()`, `delete()`, `rotateKey()`                               |
+| `client.sharing`   | `create()`, `access()`, `revoke()`                                                                 |
+| `client.approvals` | `request()`, `list()`, `approve()`, `deny()`, `check()`                                            |
+| `client.apiKeys`   | `create()`, `list()`, `revoke()`                                                                   |
+| `client.billing`   | `usage()`, `history()`                                                                             |
+| `client.audit`     | `query()`                                                                                          |
+| `client.org`       | `listMembers()`, `updateMemberRole()`, `removeMember()`                                            |
+| `client.x402`      | `getPaymentRequirement()`, `pay()`, `verifyReceipt()`, `withPayment()`                             |
 
 ## Sharing by email
 
@@ -3407,10 +4323,10 @@ Share a secret with someone who may not have an account yet:
 
 ```ts
 const { data: share } = await client.sharing.create(secretId, {
-  recipient_type: "external_email",
-  email: "colleague@example.com",
-  expires_at: "2026-04-01T00:00:00Z",
-  max_access_count: 3,
+    recipient_type: "external_email",
+    email: "colleague@example.com",
+    expires_at: "2026-04-01T00:00:00Z",
+    max_access_count: 3,
 });
 // Recipient gets an email; the share auto-claims when they sign up/log in
 ```
@@ -3422,9 +4338,9 @@ Every method returns `{ data, error, meta }`:
 ```ts
 const res = await client.secrets.get(vaultId, "MY_KEY");
 if (res.error) {
-  console.error(res.error.message); // typed error
+    console.error(res.error.message); // typed error
 } else {
-  console.log(res.data.value);
+    console.log(res.data.value);
 }
 ```
 
@@ -3432,12 +4348,12 @@ if (res.error) {
 
 ```ts
 import {
-  OneclawError,
-  AuthError,              // 401
-  PaymentRequiredError,   // 402 (x402)
-  ApprovalRequiredError,  // 403 (approval pending)
-  NotFoundError,          // 404
-  RateLimitError,         // 429
+    OneclawError,
+    AuthError, // 401
+    PaymentRequiredError, // 402 (x402)
+    ApprovalRequiredError, // 403 (approval pending)
+    NotFoundError, // 404
+    RateLimitError, // 429
 } from "@1claw/sdk";
 ```
 
@@ -3454,8 +4370,8 @@ const tools = getMcpToolDefinitions();
 // Handle tool calls
 const handler = new McpHandler(client);
 const result = await handler.handle("1claw_get_secret", {
-  vault_id: "...",
-  key: "STRIPE_KEY",
+    vault_id: "...",
+    key: "STRIPE_KEY",
 });
 ```
 
@@ -3475,7 +4391,7 @@ The dashboard uses **fetch** and **TanStack Query** with the same base URL and J
 
 ---
 
-## 
+## SDKs overview
 
 ---
 title: SDKs overview
@@ -3494,7 +4410,7 @@ The API is stable and documented in the OpenAPI 3.1 spec shipped with the projec
 
 ---
 
-## 
+## Python
 
 ---
 title: Python
@@ -3558,7 +4474,7 @@ Then use `Authorization: Bearer <token>` for vaults, secrets, policies, and agen
 
 ---
 
-## 
+## Compliance
 
 ---
 title: Compliance
@@ -3585,7 +4501,7 @@ Use the [Audit API](/docs/guides/audit-and-compliance) and policy model to docum
 
 ---
 
-## 
+## HSM overview
 
 ---
 title: HSM overview
@@ -3613,7 +4529,7 @@ See [Key hierarchy](/docs/security/key-hierarchy) and [HSM architecture](/docs/c
 
 ---
 
-## 
+## Key hierarchy
 
 ---
 title: Key hierarchy
@@ -3641,7 +4557,7 @@ This is standard **envelope encryption**. Compromise of the database or applicat
 
 ---
 
-## 
+## Zero trust
 
 ---
 title: Zero trust
@@ -3674,7 +4590,3 @@ sidebar_position: 2
 - Clients must use HTTPS. The API is served over TLS. Do not send tokens or secrets over plain HTTP.
 
 See [Trust model](/docs/concepts/trust-model) for a short summary.
-
-
----
-
