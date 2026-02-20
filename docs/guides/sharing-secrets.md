@@ -12,9 +12,10 @@ sidebar_position: 4
 
 | `recipient_type`   | Description                                                 |
 | ------------------ | ----------------------------------------------------------- |
+| `creator`          | Share back with the human who registered this agent (agents only, no ID needed) |
 | `user`             | Direct share to an existing 1Claw user by ID                |
 | `agent`            | Direct share to a registered agent by ID                    |
-| `external_email`   | Invite-by-email — the recipient doesn't need an account yet |
+| `external_email`   | Invite-by-email — the recipient doesn't need an account yet (humans only) |
 | `anyone_with_link` | Anyone with the share URL can access                        |
 
 ## Create a share
@@ -44,16 +45,39 @@ curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
 }
 ```
 
+## Agent-to-human sharing (creator)
+
+The simplest way for an agent to share a secret back with the human who owns it:
+
+```bash
+curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_type": "creator",
+    "expires_at": "2026-03-15T00:00:00Z",
+    "max_access_count": 5
+  }'
+```
+
+The backend resolves the agent's `created_by` field to identify the human. No user UUID or email needed. The human sees the share in their **Inbound** shares and accepts it.
+
+**Via MCP:**
+
+```
+share_secret(secret_id: "...", recipient_type: "creator", expires_at: "2026-12-31T00:00:00Z")
+```
+
 ## Invite-by-email flow
 
-When you share with `recipient_type: "external_email"`:
+When a human shares with `recipient_type: "external_email"`:
 
 1. A share record is created with the recipient's email.
 2. The recipient receives an email notification with a link to sign in.
 3. When the recipient signs up or logs in with that email, all pending shares are **automatically claimed** — they appear in the recipient's account.
 4. The recipient can then access the shared secret through the API or dashboard.
 
-This means agents can share secrets with humans who don't have accounts yet. The human simply signs up with the invited email address and their shares are waiting.
+Note: only humans can create email-based shares — agents are blocked from this type to prevent email spam.
 
 ## Access a share
 

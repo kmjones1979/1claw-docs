@@ -253,23 +253,31 @@ Access granted to agent abc123 on vault prod-keys.
 
 ## share_secret
 
-Share a secret with someone via email. The recipient doesn't need a 1Claw account — they'll receive an email invitation and the share will be claimed when they sign up or log in.
+Share a secret with your creator (the human who registered you), a specific user or agent by ID, or create an open link. Use `recipient_type: "creator"` for the simplest agent-to-human sharing — no UUID or email needed.
 
 ### Parameters
 
 | Name               | Type   | Required | Description                                                    |
 | ------------------ | ------ | -------- | -------------------------------------------------------------- |
 | `secret_id`        | string | Yes      | UUID of the secret to share                                    |
-| `email`            | string | Yes      | Recipient's email address                                      |
+| `recipient_type`   | string | Yes      | `creator`, `user`, `agent`, or `anyone_with_link`              |
+| `recipient_id`     | string | No       | UUID of the user or agent (required for `user`/`agent` types)  |
 | `expires_at`       | string | Yes      | ISO 8601 expiry datetime (e.g. `2026-03-01T00:00:00Z`)         |
 | `max_access_count` | number | No       | Maximum number of times the share can be accessed (default: 5) |
 
-### Example
+### Examples
 
 ```
-Agent: "Share the Stripe API key with alice@example.com"
-→ share_secret(secret_id: "cf592...", email: "alice@example.com", max_access_count: 3)
+Agent: "Share this key with the person who set me up"
+→ share_secret(secret_id: "cf592...", recipient_type: "creator", expires_at: "2026-03-01T00:00:00Z")
 
-Secret shared with alice@example.com. Share ID: df703...
-They'll receive an email and can access the secret after signing in.
+Secret shared with your creator. Share ID: df703...
+The recipient must accept the share before they can access the secret.
+```
+
+```
+Agent: "Share this with agent abc123"
+→ share_secret(secret_id: "cf592...", recipient_type: "agent", recipient_id: "abc123", max_access_count: 3)
+
+Secret shared with agent abc123. Share ID: ef814...
 ```

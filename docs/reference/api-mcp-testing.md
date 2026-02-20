@@ -273,6 +273,15 @@ curl -s -X DELETE "$API/v1/agents/$AGENT_ID" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
+### Agent self-inspection
+
+```bash
+# Get the agent's own profile (includes created_by — the human who registered it)
+curl -s "$API/v1/agents/me" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  | python3 -m json.tool
+```
+
 ### Agent authentication
 
 ```bash
@@ -297,12 +306,24 @@ curl -s "$API/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
 ## 8. Sharing
 
 ```bash
-# Create a share (by secret ID, with email invite)
+# Agent shares a secret back with its creator (the human who registered it)
+curl -s -X POST "$API/v1/secrets/<secret_id>/share" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_type": "creator",
+    "expires_at": "2026-03-01T00:00:00Z",
+    "max_access_count": 5
+  }' \
+  | python3 -m json.tool
+
+# Create a share (by secret ID, with email invite — humans only)
 curl -s -X POST "$API/v1/secrets/<secret_id>/share" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "recipient_email": "colleague@example.com",
+    "recipient_type": "external_email",
+    "email": "colleague@example.com",
     "expires_at": "2026-03-01T00:00:00Z",
     "max_access_count": 5
   }' \

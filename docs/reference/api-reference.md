@@ -79,6 +79,7 @@ All endpoints are under **/v1**.
 |--------|------|-------------|
 | POST | `/v1/agents` | Register agent |
 | GET | `/v1/agents` | List agents |
+| GET | `/v1/agents/me` | Get calling agent's own profile (includes `created_by`) |
 | GET | `/v1/agents/:agent_id` | Get agent |
 | PATCH | `/v1/agents/:agent_id` | Update agent (name, description, crypto_proxy_enabled) |
 | DELETE | `/v1/agents/:agent_id` | Deactivate agent |
@@ -88,7 +89,7 @@ All endpoints are under **/v1**.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/v1/secrets/:secret_id/share` | Create share (supports email invites) |
+| POST | `/v1/secrets/:secret_id/share` | Create share (`creator`, `user`, `agent`, `external_email`, `anyone_with_link`) |
 | GET | `/v1/shares/outbound` | List shares you created |
 | GET | `/v1/shares/inbound` | List shares sent to you |
 | POST | `/v1/shares/:share_id/accept` | Accept an inbound share |

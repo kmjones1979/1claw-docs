@@ -63,10 +63,13 @@ Use the `grant_access` tool or `POST /v1/vaults/{id}/policies` to create a fine-
 ### 2. One-off share links
 
 Use `share_secret` or `POST /v1/secrets/{id}/share` to create a time-limited, access-counted link to a single secret. Share types:
+- `creator` — agent shares back with the human who registered it (no UUID needed, recommended for agent-to-human sharing)
 - `user` — direct share to a user by ID
 - `agent` — direct share to an agent by ID
 - `external_email` — invite-by-email (humans only, not available to agents)
 - `anyone_with_link` — open link
+
+Agents can also call `GET /v1/agents/me` to retrieve their own profile (including `created_by` UUID) for more complex sharing scenarios.
 
 Shares support optional passphrase protection and IP allowlists, both enforced server-side. Recipients of targeted shares must explicitly accept before accessing the secret.
 
