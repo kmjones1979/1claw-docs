@@ -86,7 +86,7 @@ Shares support optional passphrase protection and IP allowlists, both enforced s
 - **Free tier**: 1,000 API requests/month per organization.
 - **Pay-per-use**: x402 micropayments on Base (EIP-155:8453) after free tier.
 - **Pricing**: Read secret $0.001, write $0.005, share $0.002, audit $0.0005.
-- **Facilitator**: Payment verification and settlement uses an x402 facilitator (default: `https://x402.org/facilitator`). Platform admins can configure the facilitator URL in Admin Settings.
+- **Facilitator**: Payment verification and settlement uses the Coinbase CDP x402 facilitator (default: `https://api.cdp.coinbase.com/platform/v2/x402`). Requires `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET` env vars for Ed25519 JWT authentication. Platform admins can configure the facilitator URL in Admin Settings.
 - Usage is tracked across dashboard, SDK, and MCP — all count against the same quota.
 
 ## Web dashboard
