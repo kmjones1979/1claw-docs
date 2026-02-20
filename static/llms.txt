@@ -6,6 +6,33 @@
 
 1claw stores API keys, tokens, and other secrets inside a cloud HSM. Humans control which agents can access which secrets, with what permissions, and for how long. Agents authenticate with 1claw and receive secrets at runtime — they never hold secrets in their own environment or context window.
 
+## Access Control Model
+
+1claw uses policy-based access control. Agents do NOT get blanket access to all secrets in a vault — they only get access to specific secret paths that a human explicitly grants.
+
+### How humans grant agent access
+
+1. **Register an agent** in the dashboard (name, auth method, scopes)
+2. **Create a vault** and store secrets
+3. **Create an access policy** that links the agent to specific secret paths:
+   - `principal_type: "agent"`, `principal_id: <agent_uuid>`
+   - `secret_path_pattern: "api-keys/*"` (glob pattern — `*` matches one segment, `**` matches any depth)
+   - `permissions: ["read"]` (read, write, delete)
+   - Optional conditions: IP allowlist, time windows, expiry date
+4. **Agent authenticates** via `POST /v1/auth/agent-token` with agent ID + API key → receives a short-lived JWT
+5. **Agent requests a secret**: policy engine evaluates whether the agent has a matching policy before returning the secret
+
+### Owner bypass
+
+Vault creators always have full read/write access to their own vault. Agents that create vaults automatically have access, but cannot modify policies on human-created vaults.
+
+### Policy conditions
+
+Policies support optional conditions:
+- **IP allowlist**: restrict access to specific IP addresses
+- **Time windows**: restrict access to specific hours/days
+- **Expiry**: policy automatically expires after a set date
+
 ## Bi-directional Human/Agent Access
 
 Both humans and agents are first-class principals. Either can create vaults, store secrets, and share access with the other.
@@ -20,6 +47,28 @@ Both humans and agents are first-class principals. Either can create vaults, sto
 - Auto-share ensures humans always have visibility into agent-created resources.
 - All resources are org-scoped; agents cannot reach outside their organization.
 - Every action is audit-logged with actor type and identity.
+- Agents cannot send email-based share invites (prevents email spam abuse).
+- Share links require explicit acceptance by the recipient before secrets are accessible.
+- Share creation is rate-limited to 10 per minute per organization.
+- Passphrase protection and IP allowlists on share links are enforced server-side.
+
+## Sharing
+
+1claw has two sharing mechanisms:
+
+### 1. Policy-based vault access (primary)
+
+Use the `grant_access` tool or `POST /v1/vaults/{id}/policies` to create a fine-grained policy linking a principal (user or agent) to specific secret paths with specific permissions.
+
+### 2. One-off share links
+
+Use `share_secret` or `POST /v1/secrets/{id}/share` to create a time-limited, access-counted link to a single secret. Share types:
+- `user` — direct share to a user by ID
+- `agent` — direct share to an agent by ID
+- `external_email` — invite-by-email (humans only, not available to agents)
+- `anyone_with_link` — open link
+
+Shares support optional passphrase protection and IP allowlists, both enforced server-side. Recipients of targeted shares must explicitly accept before accessing the secret.
 
 ## MCP Server
 
@@ -27,10 +76,10 @@ Both humans and agents are first-class principals. Either can create vaults, sto
 
 - **Hosted** at `mcp.1claw.xyz` — no installation needed; authenticate with `Authorization` and `X-Vault-ID` headers.
 - **Local (stdio)** — run via Claude Desktop or Cursor with agent token and vault ID as env vars.
-- **10 tools**: `list_secrets`, `get_secret`, `put_secret`, `delete_secret`, `describe_secret`, `rotate_and_store`, `get_env_bundle`, `create_vault`, `list_vaults`, `grant_access`.
+- **11 tools**: `list_secrets`, `get_secret`, `put_secret`, `delete_secret`, `describe_secret`, `rotate_and_store`, `get_env_bundle`, `create_vault`, `list_vaults`, `grant_access`, `share_secret`.
 - **Resource**: `vault://secrets` — browsable listing of all secret paths.
 - Secrets are fetched just-in-time, never cached, never logged.
-- Agents can create vaults (`create_vault`), discover available vaults (`list_vaults`), and share access with humans or other agents (`grant_access`).
+- Agents can create vaults (`create_vault`), discover available vaults (`list_vaults`), share access with humans or other agents (`grant_access`), and share individual secrets (`share_secret`).
 
 ## Billing & Usage
 
@@ -48,7 +97,8 @@ At [1claw.xyz](https://1claw.xyz) you sign in (email/password or Google), then u
 - **Vault** — A container for secrets; each vault has its own HSM-backed key (KEK). Both humans and agents can create vaults. Agent-created vaults are automatically shared with the agent's human creator.
 - **Secret** — An encrypted credential stored in the vault (API key, token, password, certificate, etc.) at a path (e.g. `passwords/one`, `api-keys/stripe`).
 - **Agent** — A registered AI entity (Claude, GPT, custom bot, MCP server) that receives an API key and can be granted access via policies. Agents are first-class principals that can create vaults, store secrets, and share access.
-- **Policy (grant)** — Links a principal (user or agent) to secret path patterns with permissions (read, write, delete, etc.) and optional conditions/expiry.
+- **Policy (grant)** — Links a principal (user or agent) to secret path patterns with permissions (read, write, delete, etc.) and optional conditions/expiry. This is the primary access control mechanism.
+- **Share link** — A one-off, time-limited link to a single secret. Recipients must explicitly accept before accessing. Separate from policy-based access.
 - **Principal type** — Every creator is tracked with a `created_by_type` of `user` or `agent`, matching the JWT `sub` claim format (`user:UUID` or `agent:UUID`).
 - **HSM** — Hardware Security Module; in production 1claw uses Google Cloud KMS. DEKs wrap secrets; KEKs wrap DEKs and never leave the HSM.
 - **Human auth** — Email/password or Google OAuth → JWT. Personal API keys (`1ck_`) also get a JWT.
