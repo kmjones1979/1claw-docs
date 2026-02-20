@@ -357,7 +357,7 @@ curl -s "$API/v1/chains/1" \
 
 ## 10. Transactions (Crypto Proxy)
 
-The agent must have `crypto_proxy_enabled: true`. Use the agent's JWT.
+The agent must have `crypto_proxy_enabled: true`. Use the agent's JWT. When enabled, the agent is blocked from reading `private_key` and `ssh_key` secrets directly — it must use these proxy endpoints instead.
 
 ```bash
 # Submit a transaction

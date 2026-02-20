@@ -104,7 +104,7 @@ All endpoints are under **/v1**.
 
 ## Transactions (Crypto Proxy)
 
-Requires `crypto_proxy_enabled: true` on the agent.
+Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is also **blocked** from reading `private_key` and `ssh_key` type secrets through the standard secrets endpoint — it must use the proxy to sign transactions.
 
 | Method | Path | Description |
 |--------|------|-------------|
