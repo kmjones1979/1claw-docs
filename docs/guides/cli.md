@@ -51,19 +51,19 @@ export ONECLAW_VAULT_ID="your-vault-uuid"   # optional; required for vault-scope
 
 ## Main commands
 
-| Area | Commands |
-|------|----------|
-| **Auth** | `login`, `logout`, `whoami` |
-| **Vaults** | `vault list`, `vault create`, `vault get`, `vault link`, `vault delete` |
-| **Secrets** | `secret list`, `secret get`, `secret set`, `secret delete`, `secret rotate`, `secret describe` |
-| **CI/CD** | `env pull`, `env push`, `env run -- <command>` |
-| **Agents** | `agent list`, `agent create`, `agent get`, `agent token` |
-| **Policies** | `policy list`, `policy create`, `policy delete` |
-| **Sharing** | `share create`, `share list`, `share accept`, `share revoke` |
-| **Billing** | `billing status`, `billing credits`, `billing usage` |
-| **Audit** | `audit list` |
-| **MFA** | `mfa status`, `mfa enable`, `mfa disable` |
-| **Config** | `config list`, `config set`, `config get` |
+| Area         | Commands                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| **Auth**     | `login`, `logout`, `whoami`                                                                    |
+| **Vaults**   | `vault list`, `vault create`, `vault get`, `vault link`, `vault delete`                        |
+| **Secrets**  | `secret list`, `secret get`, `secret set`, `secret delete`, `secret rotate`, `secret describe` |
+| **CI/CD**    | `env pull`, `env push`, `env run -- <command>`                                                 |
+| **Agents**   | `agent list`, `agent create`, `agent get`, `agent token`                                       |
+| **Policies** | `policy list`, `policy create`, `policy delete`                                                |
+| **Sharing**  | `share create`, `share list`, `share accept`, `share revoke`                                   |
+| **Billing**  | `billing status`, `billing credits`, `billing usage`                                           |
+| **Audit**    | `audit list`                                                                                   |
+| **MFA**      | `mfa status`, `mfa enable`, `mfa disable`                                                      |
+| **Config**   | `config list`, `config set`, `config get`                                                      |
 
 ## CI/CD examples
 
@@ -72,11 +72,11 @@ export ONECLAW_VAULT_ID="your-vault-uuid"   # optional; required for vault-scope
 ```yaml
 - name: Deploy with secrets
   env:
-    ONECLAW_TOKEN: ${{ secrets.ONECLAW_TOKEN }}
-    ONECLAW_VAULT_ID: ${{ secrets.ONECLAW_VAULT_ID }}
+      ONECLAW_TOKEN: ${{ secrets.ONECLAW_TOKEN }}
+      ONECLAW_VAULT_ID: ${{ secrets.ONECLAW_VAULT_ID }}
   run: |
-    npx @1claw/cli env pull -o .env.production
-    npm run deploy
+      npx @1claw/cli env pull -o .env.production
+      npm run deploy
 ```
 
 ### Run a command with secrets injected

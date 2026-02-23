@@ -35,25 +35,25 @@ sidebar_position: 5
 
 ## Technical details
 
-| Property | Value |
-|---|---|
-| Algorithm | TOTP (RFC 6238), SHA-1 |
-| Digits | 6 |
-| Step | 30 seconds |
-| Skew | ±1 step (clock drift tolerance) |
-| Secret storage | AES-256-GCM encrypted at rest |
+| Property       | Value                                  |
+| -------------- | -------------------------------------- |
+| Algorithm      | TOTP (RFC 6238), SHA-1                 |
+| Digits         | 6                                      |
+| Step           | 30 seconds                             |
+| Skew           | ±1 step (clock drift tolerance)        |
+| Secret storage | AES-256-GCM encrypted at rest          |
 | Recovery codes | 8 codes, encrypted at rest, single-use |
-| MFA token TTL | 5 minutes |
+| MFA token TTL  | 5 minutes                              |
 
 ### API endpoints
 
-| Endpoint | Auth | Description |
-|---|---|---|
-| `GET /v1/auth/mfa/status` | Bearer JWT | Returns whether MFA is enabled |
-| `POST /v1/auth/mfa/setup` | Bearer JWT | Generates TOTP secret and returns QR code URI |
-| `POST /v1/auth/mfa/verify-setup` | Bearer JWT | Verifies initial code, enables MFA, returns recovery codes |
-| `POST /v1/auth/mfa/verify` | None (uses MFA token) | Validates TOTP code during login, returns session JWT |
-| `DELETE /v1/auth/mfa` | Bearer JWT | Disables MFA (requires TOTP code or password) |
+| Endpoint                         | Auth                  | Description                                                |
+| -------------------------------- | --------------------- | ---------------------------------------------------------- |
+| `GET /v1/auth/mfa/status`        | Bearer JWT            | Returns whether MFA is enabled                             |
+| `POST /v1/auth/mfa/setup`        | Bearer JWT            | Generates TOTP secret and returns QR code URI              |
+| `POST /v1/auth/mfa/verify-setup` | Bearer JWT            | Verifies initial code, enables MFA, returns recovery codes |
+| `POST /v1/auth/mfa/verify`       | None (uses MFA token) | Validates TOTP code during login, returns session JWT      |
+| `DELETE /v1/auth/mfa`            | Bearer JWT            | Disables MFA (requires TOTP code or password)              |
 
 ### MFA challenge flow
 
@@ -61,11 +61,11 @@ When a user with 2FA enabled authenticates via `POST /v1/auth/token` or `POST /v
 
 ```json
 {
-  "mfa_required": true,
-  "mfa_token": "<short-lived-jwt>",
-  "access_token": "",
-  "token_type": "Bearer",
-  "expires_in": 300
+    "mfa_required": true,
+    "mfa_token": "<short-lived-jwt>",
+    "access_token": "",
+    "token_type": "Bearer",
+    "expires_in": 300
 }
 ```
 

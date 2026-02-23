@@ -65,10 +65,10 @@ Agents authenticate by exchanging an **agent ID** and **API key** for a short-li
 
 ## Request body
 
-| Field     | Type   | Required | Description |
-|----------|--------|----------|-------------|
+| Field    | Type   | Required | Description                           |
+| -------- | ------ | -------- | ------------------------------------- |
 | agent_id | string | ✅       | UUID of the agent (from registration) |
-| api_key  | string | ✅       | Agent API key (e.g. `ocv_...`) |
+| api_key  | string | ✅       | Agent API key (e.g. `ocv_...`)        |
 
 ## Example request
 
@@ -85,19 +85,23 @@ curl -X POST https://api.1claw.xyz/v1/auth/agent-token \
 
 ```json
 {
-  "access_token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
-  "token_type": "Bearer",
-  "expires_in": 3600
+    "access_token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+    "token_type": "Bearer",
+    "expires_in": 3600
 }
 ```
 
 Use `access_token` in the `Authorization` header for all subsequent API calls. When `expires_in` seconds have passed, call this endpoint again to get a new token.
 
+## JWT scopes
+
+The issued JWT includes a `scopes` claim. If the agent record has scopes set (e.g. from creation or PATCH), those are used. If the agent has no scopes set, the backend derives scopes from the agent’s **access policies**: the path patterns from all active policies for that agent become the JWT scopes, so the token reflects current policy-based access. If there are no policies either, scopes default to `["*"]`.
+
 ## Error responses
 
-| Code | Meaning |
-|------|---------|
-| 401 | Invalid agent_id or api_key, agent inactive, or agent expired |
+| Code | Meaning                                                       |
+| ---- | ------------------------------------------------------------- |
+| 401  | Invalid agent_id or api_key, agent inactive, or agent expired |
 
 Never log or expose the API key; treat it like a password.
 
@@ -523,19 +527,35 @@ Use the audit log for compliance reviews, incident response, and access analysis
 
 ---
 title: Billing & Usage
-description: How 1claw tracks API usage, the free tier, x402 pay-per-use micropayments, and how to monitor your consumption.
+description: Subscription tiers, usage tracking, prepaid credits, x402 micropayments, and how to monitor your consumption.
 sidebar_position: 5
 ---
 
 # Billing & Usage
 
-1claw tracks every API request and provides a free tier with optional pay-per-use billing via the x402 protocol.
+1claw tracks every API request and offers flexible billing through subscription tiers with optional prepaid credits or on-chain micropayments for overages.
 
-## Free tier
+## Subscription Tiers
 
-Every organization gets **1,000 API requests per month** at no cost. This includes requests from all sources — dashboard, SDK, MCP server, and direct API calls. Auth and health endpoints are not counted.
+Every organization starts on the **Free** tier and can upgrade to paid plans for higher limits:
 
-## Usage tracking
+| Tier           | Monthly Price | Annual Price | Requests/mo | Vaults    | Secrets   | Agents    |
+| -------------- | ------------- | ------------ | ----------- | --------- | --------- | --------- |
+| **Free**       | $0            | —            | 1,000       | 3         | 50        | 2         |
+| **Pro**        | $29           | $290         | 25,000      | 25        | 500       | 10        |
+| **Business**   | $149          | $1,490       | 100,000     | 100       | 5,000     | 50        |
+| **Enterprise** | Custom        | Custom       | Unlimited   | Unlimited | Unlimited | Unlimited |
+
+### Upgrading
+
+Visit [1claw.xyz/settings/billing](https://1claw.xyz/settings/billing) to:
+
+- Start a subscription checkout (Stripe)
+- View your current tier and limits
+- Manage your subscription (upgrade, downgrade, cancel)
+- Access the Stripe customer portal for invoices and payment methods
+
+## Usage Tracking
 
 Every authenticated API request is recorded as a usage event with:
 
@@ -549,49 +569,202 @@ Usage is unified across all access methods. Whether a secret is read from the da
 
 ## Pricing
 
-| Endpoint | Price |
-|----------|-------|
-| Read a secret (`GET /v1/vaults/*/secrets/*`) | $0.001 |
-| Write a secret (`PUT /v1/vaults/*/secrets/*`) | $0.005 |
-| Create a share link (`POST /v1/secrets/*/share`) | $0.002 |
-| Access a shared secret (`GET /v1/share/*`) | $0.001 |
-| Query audit events (`GET /v1/audit/events`) | $0.0005 |
-| Auth, health, listing endpoints | Free |
+### Base Rates
 
-## x402 Payment Required
+| Endpoint                                         | Price   |
+| ------------------------------------------------ | ------- |
+| Read a secret (`GET /v1/vaults/*/secrets/*`)     | $0.001  |
+| Write a secret (`PUT /v1/vaults/*/secrets/*`)    | $0.005  |
+| Create a share link (`POST /v1/secrets/*/share`) | $0.002  |
+| Access a shared secret (`GET /v1/share/*`)       | $0.001  |
+| Query audit events (`GET /v1/audit/events`)      | $0.0005 |
+| Auth, health, listing endpoints                  | Free    |
 
-When the free tier is exhausted, the API returns `402 Payment Required` with an [x402](https://www.x402.org/) payment envelope. Clients that support x402 can pay per-request on the Base network (EIP-155:8453).
+### Overage Rates (After Tier Limit)
+
+When you exceed your tier's monthly request limit, overage charges apply. **Pro** and **Business** tiers get discounted overage rates:
+
+| Tier       | Overage Rate per Request |
+| ---------- | ------------------------ |
+| Free       | $0.001 (standard rate)   |
+| Pro        | $0.0008 (20% discount)   |
+| Business   | $0.0006 (40% discount)   |
+| Enterprise | Custom                   |
+
+## Overage Methods
+
+When your monthly tier limit is exhausted, you can choose how to pay for overages:
+
+### 1. Prepaid Credits (Recommended)
+
+Top up your account with credits ($5–$1,000) via Stripe. Credits are deducted automatically when you exceed your tier limit, expire after 12 months, and benefit from your tier's discounted overage rates.
+
+**Benefits:**
+
+- Automatic deduction — no per-request payment flow
+- Tier discounts apply (Pro/Business save 20–40%)
+- Simple billing — one-time top-up, credits last 12 months
+- No blockchain interaction required
+
+**How it works:**
+
+1. Visit `/settings/billing` and click "Top Up Credits"
+2. Choose an amount ($5, $10, $25, $50, $100, $250, $500, $1,000)
+3. Complete Stripe checkout
+4. Credits are added immediately and used automatically for overages
+
+### 2. x402 Micropayments (On-Chain)
+
+Pay per-request on the Base network (EIP-155:8453) using the [x402 protocol](https://www.x402.org/). Each overage request requires an on-chain payment before the API responds.
+
+**Benefits:**
+
+- Pay only for what you use — no prepayment
+- On-chain transparency
+- Works with any x402-compatible wallet
+
+**How it works:**
+When the free tier is exhausted, the API returns `402 Payment Required` with an x402 payment envelope:
 
 ```json
 {
-  "type": "https://httpproblems.com/http-status/402",
-  "title": "Payment Required",
-  "status": 402,
-  "detail": "Free tier limit exceeded. Pay per-request or upgrade your plan.",
-  "x402": {
-    "scheme": "exact",
-    "network": "eip155:8453",
-    "maxAmountRequired": "0.001",
-    "resource": "/v1/vaults/:vault_id/secrets/:path",
-    "description": "Read a secret",
-    "payTo": "0x...",
-    "deadline": 1740000000
-  }
+    "type": "https://httpproblems.com/http-status/402",
+    "title": "Payment Required",
+    "status": 402,
+    "detail": "Tier limit exceeded. Pay per-request or top up credits.",
+    "x402": {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "maxAmountRequired": "0.001",
+        "resource": "/v1/vaults/:vault_id/secrets/:path",
+        "description": "Read a secret",
+        "payTo": "0x...",
+        "deadline": 1740000000
+    }
 }
 ```
 
-## Monitoring usage
+Clients that support x402 can pay the required amount on-chain and retry the request.
+
+### Choosing Your Overage Method
+
+Toggle between credits and x402 in the billing dashboard or via API:
+
+```bash
+# Use prepaid credits for overages
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"overage_method": "credits"}' \
+  https://api.1claw.xyz/v1/billing/overage-method
+
+# Use x402 micropayments for overages
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"overage_method": "x402"}' \
+  https://api.1claw.xyz/v1/billing/overage-method
+```
+
+**Default:** New organizations default to `credits`. If you have no credits and haven't set up x402, you'll need to top up credits or configure x402 before overages can be processed.
+
+## Monitoring Usage
 
 ### Dashboard
 
 Visit [1claw.xyz/settings/billing](https://1claw.xyz/settings/billing) to see:
 
-- Current month's total requests
-- Breakdown of free vs paid requests
-- Total cost
+- Current subscription tier and limits
+- Current month's total requests vs tier limit
+- Usage breakdown (free tier vs overages)
+- Credit balance and expiring credits (next 30 days)
+- Overage method (credits or x402)
+- Total cost (subscription + overages)
 - Recent usage history
+- Credit transaction ledger
 
 ### API
+
+#### Get Full Subscription Summary
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  https://api.1claw.xyz/v1/billing/subscription
+```
+
+Response includes subscription status, usage, and credits:
+
+```json
+{
+    "subscription": {
+        "tier": "pro",
+        "status": "active",
+        "current_period_end": "2026-03-20T00:00:00Z",
+        "cancel_at_period_end": false
+    },
+    "usage": {
+        "tier_limit": 25000,
+        "current_month": {
+            "total_requests": 18472,
+            "tier_requests": 18472,
+            "overage_requests": 0,
+            "total_cost_usd": 0.0
+        }
+    },
+    "credits": {
+        "balance_usd": 50.0,
+        "expiring_next_30_days": 0.0
+    },
+    "overage_method": "credits"
+}
+```
+
+#### Get Credit Balance
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  https://api.1claw.xyz/v1/billing/credits/balance
+```
+
+```json
+{
+    "balance_usd": 50.0,
+    "expiring_next_30_days": 0.0,
+    "expiring_credits": []
+}
+```
+
+#### Get Credit Transactions
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://api.1claw.xyz/v1/billing/credits/transactions?limit=20&offset=0"
+```
+
+```json
+{
+    "transactions": [
+        {
+            "id": "uuid",
+            "type": "topup",
+            "amount_usd": 50.0,
+            "balance_after_usd": 50.0,
+            "created_at": "2026-02-15T10:30:00Z"
+        },
+        {
+            "id": "uuid",
+            "type": "usage",
+            "amount_usd": -0.5,
+            "balance_after_usd": 49.5,
+            "description": "Overage charges for 625 requests",
+            "created_at": "2026-02-18T14:22:00Z"
+        }
+    ],
+    "total": 2,
+    "limit": 20,
+    "offset": 0
+}
+```
+
+#### Legacy Usage Endpoints (Still Available)
 
 ```bash
 # Get current month summary
@@ -603,28 +776,340 @@ curl -H "Authorization: Bearer $TOKEN" \
   "https://api.1claw.xyz/v1/billing/history?limit=50"
 ```
 
-### Usage summary response
-
-```json
-{
-  "billing_tier": "free",
-  "free_tier_limit": 1000,
-  "current_month": {
-    "total_requests": 247,
-    "paid_requests": 0,
-    "free_requests": 247,
-    "total_cost_usd": 0.0
-  }
-}
-```
-
-## MCP and billing
+## MCP and Billing
 
 MCP tool calls go through the same vault API and count toward the same usage quota. When an agent calls `get_secret` via MCP, that's one API request.
 
-If the free tier is exhausted, the MCP server will return a clear error message:
+If your tier limit is exhausted and you have no credits (or x402 configured), the MCP server will return a clear error message:
 
-> "Free tier quota exhausted. Upgrade your plan or add payment at https://1claw.xyz/settings/billing"
+> "Tier limit exceeded. Top up credits or configure payment at https://1claw.xyz/settings/billing"
+
+## Enterprise
+
+For organizations with custom requirements, unlimited usage, dedicated support, or on-premise deployments, contact us at [ops@1claw.xyz](mailto:ops@1claw.xyz) to discuss Enterprise pricing and terms.
+
+
+---
+
+## 1Claw CLI
+
+---
+title: CLI
+description: Use the 1Claw CLI for CI/CD, DevOps, and servers. Browser-based login, env pull/push/run, and full API coverage.
+sidebar_position: 11
+---
+
+# 1Claw CLI
+
+The `@1claw/cli` package provides a full-featured command-line interface for 1Claw. It is designed for CI/CD pipelines, DevOps workflows, and server environments.
+
+## Installation
+
+```bash
+npm install -g @1claw/cli
+```
+
+Or run with npx:
+
+```bash
+npx @1claw/cli login
+```
+
+## Authentication
+
+### Browser-based login (recommended)
+
+```bash
+1claw login
+```
+
+This opens your browser to 1claw.xyz where you approve the login. The CLI polls until you confirm. Your token is stored in `~/.config/1claw/`.
+
+### Email/password
+
+```bash
+1claw login --email
+```
+
+Supports MFA if enabled on your account.
+
+### CI/CD (non-interactive)
+
+Set environment variables — no login needed:
+
+```bash
+export ONECLAW_TOKEN="your-jwt"
+# or
+export ONECLAW_API_KEY="1ck_..."
+export ONECLAW_VAULT_ID="your-vault-uuid"   # optional; required for vault-scoped commands
+```
+
+## Main commands
+
+| Area         | Commands                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| **Auth**     | `login`, `logout`, `whoami`                                                                    |
+| **Vaults**   | `vault list`, `vault create`, `vault get`, `vault link`, `vault delete`                        |
+| **Secrets**  | `secret list`, `secret get`, `secret set`, `secret delete`, `secret rotate`, `secret describe` |
+| **CI/CD**    | `env pull`, `env push`, `env run -- <command>`                                                 |
+| **Agents**   | `agent list`, `agent create`, `agent get`, `agent token`                                       |
+| **Policies** | `policy list`, `policy create`, `policy delete`                                                |
+| **Sharing**  | `share create`, `share list`, `share accept`, `share revoke`                                   |
+| **Billing**  | `billing status`, `billing credits`, `billing usage`                                           |
+| **Audit**    | `audit list`                                                                                   |
+| **MFA**      | `mfa status`, `mfa enable`, `mfa disable`                                                      |
+| **Config**   | `config list`, `config set`, `config get`                                                      |
+
+## CI/CD examples
+
+### GitHub Actions
+
+```yaml
+- name: Deploy with secrets
+  env:
+      ONECLAW_TOKEN: ${{ secrets.ONECLAW_TOKEN }}
+      ONECLAW_VAULT_ID: ${{ secrets.ONECLAW_VAULT_ID }}
+  run: |
+      npx @1claw/cli env pull -o .env.production
+      npm run deploy
+```
+
+### Run a command with secrets injected
+
+```bash
+1claw env run -- npm start
+```
+
+Secrets from the linked (or `ONECLAW_VAULT_ID`) vault are injected as environment variables for the child process.
+
+## Configuration
+
+Config file: `~/.config/1claw/config.json`.
+
+- `api-url` — API base URL (default: `https://api.1claw.xyz`)
+- `output-format` — `table`, `json`, or `plain`
+- `default-vault` — Default vault ID for commands that need one
+
+Use `1claw config list` and `1claw config set <key> <value>` to view and update.
+
+## Device authorization flow
+
+When you run `1claw login` (without `--email`), the CLI:
+
+1. Calls `POST /v1/auth/device/code` to get a device code and user code.
+2. Opens the dashboard at `https://1claw.xyz/cli/verify?code=<user_code>`.
+3. You approve the request in the browser (while logged in to 1Claw).
+4. The CLI polls `POST /v1/auth/device/token` until the backend marks the code approved, then receives a JWT and stores it.
+
+This flow does not require typing your password in the terminal.
+
+## See also
+
+- [JavaScript SDK](/docs/sdks/javascript) — Programmatic access from Node.js or browsers
+- [MCP Server](/docs/mcp/overview) — AI agents accessing secrets via tools
+- [Two-factor authentication](/docs/security/two-factor-auth) — Optional 2FA for human logins
+
+
+---
+
+## Crypto Transaction Proxy
+
+---
+title: Crypto Transaction Proxy
+description: Let agents sign and broadcast blockchain transactions without ever seeing private keys. Includes the full list of supported chains.
+sidebar_position: 3
+---
+
+# Crypto Transaction Proxy
+
+The Crypto Transaction Proxy lets an agent submit on-chain transactions — transfers, swaps, contract calls — while **never having access to the raw private key**. The server signs the transaction using keys stored in the vault and broadcasts it through a dedicated RPC for the target chain.
+
+## How it works
+
+```
+Agent                       1claw Vault                  Blockchain
+  │                             │                            │
+  │  POST /v1/agents/:id/       │                            │
+  │    transactions             │                            │
+  │  { chain_id, to, value,     │                            │
+  │    data, secret_path }      │                            │
+  │ ─────────────────────────►  │                            │
+  │                             │ 1. Decrypt private key     │
+  │                             │    from vault via HSM      │
+  │                             │ 2. Build & sign tx         │
+  │                             │ 3. Broadcast via RPC  ───► │
+  │                             │                            │
+  │  ◄───────────────────────── │  tx_hash, status           │
+  │  { tx_id, tx_hash, status } │                            │
+```
+
+1. The agent calls `POST /v1/agents/:agent_id/transactions` with the chain, recipient, value, calldata, and the vault path to the signing key.
+2. The vault decrypts the private key inside the HSM boundary, constructs and signs the transaction, and broadcasts it to the chain's RPC endpoint.
+3. The agent receives a `tx_id` and `tx_hash` — it never sees the raw key material.
+
+## Enabling the proxy
+
+Set `crypto_proxy_enabled: true` when registering or updating an agent:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "DeFi Bot",
+    "crypto_proxy_enabled": true
+  }'
+```
+
+### What changes when enabled
+
+| Behaviour                        | `crypto_proxy_enabled: false` | `crypto_proxy_enabled: true` |
+| -------------------------------- | ----------------------------- | ---------------------------- |
+| Read `api_key`, `password`, etc. | Allowed                       | Allowed                      |
+| Read `private_key` or `ssh_key`  | Allowed                       | **Blocked (403)**            |
+| Submit proxy transactions        | Not available                 | Allowed                      |
+| Audit trail per transaction      | N/A                           | Full trace with `tx_id`      |
+
+The enforcement is two-sided: the flag both **grants** access to the transaction endpoints and **blocks** direct reads of signing keys through the standard secrets endpoint. This guarantees the agent can only use keys through the proxy.
+
+## Submitting a transaction
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain_id": 1,
+    "to": "0xRecipientAddress",
+    "value": "1000000000000000000",
+    "data": "0x",
+    "secret_path": "wallets/hot-wallet"
+  }'
+```
+
+### Response
+
+```json
+{
+    "tx_id": "a7e2c...",
+    "tx_hash": "0xabc123...",
+    "chain_id": 1,
+    "status": "submitted"
+}
+```
+
+## Querying transactions
+
+```bash
+# List all transactions for this agent
+curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN"
+
+# Get a specific transaction
+curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/$TX_ID" \
+  -H "Authorization: Bearer $AGENT_TOKEN"
+```
+
+## MCP tool
+
+If you're using the MCP server, the `submit_transaction` tool wraps the same endpoint:
+
+```
+Tool: submit_transaction
+Args:
+  chain_id: 8453
+  to: "0xRecipientAddress"
+  value: "500000000000000000"
+  data: "0x"
+  secret_path: "wallets/hot-wallet"
+```
+
+---
+
+## Supported chains {#supported-chains}
+
+The proxy can broadcast transactions to any chain in the registry. All mainnet chains below are configured with dedicated dRPC endpoints for reliable transaction delivery.
+
+:::tip Querying chains via API
+You can always fetch the live list with `GET /v1/chains`. The response includes `chain_id`, `rpc_url`, `explorer_url`, and `native_currency` for every chain.
+:::
+
+### Mainnet chains (28)
+
+| Chain             | Chain ID | Native token | Explorer                                                           |
+| ----------------- | -------- | ------------ | ------------------------------------------------------------------ |
+| Ethereum          | 1        | ETH          | [etherscan.io](https://etherscan.io)                               |
+| Optimism          | 10       | ETH          | [optimistic.etherscan.io](https://optimistic.etherscan.io)         |
+| Cronos            | 25       | CRO          | [cronoscan.com](https://cronoscan.com)                             |
+| BNB Smart Chain   | 56       | BNB          | [bscscan.com](https://bscscan.com)                                 |
+| Gnosis            | 100      | xDAI         | [gnosisscan.io](https://gnosisscan.io)                             |
+| Polygon           | 137      | POL          | [polygonscan.com](https://polygonscan.com)                         |
+| Sonic             | 146      | S            | [sonicscan.org](https://sonicscan.org)                             |
+| Fantom            | 250      | FTM          | [ftmscan.com](https://ftmscan.com)                                 |
+| zkSync Era        | 324      | ETH          | [explorer.zksync.io](https://explorer.zksync.io)                   |
+| World Chain       | 480      | ETH          | [worldscan.org](https://worldscan.org)                             |
+| Metis             | 1088     | METIS        | [andromeda-explorer.metis.io](https://andromeda-explorer.metis.io) |
+| Polygon zkEVM     | 1101     | ETH          | [zkevm.polygonscan.com](https://zkevm.polygonscan.com)             |
+| Moonbeam          | 1284     | GLMR         | [moonscan.io](https://moonscan.io)                                 |
+| Sei               | 1329     | SEI          | [seitrace.com](https://seitrace.com)                               |
+| Mantle            | 5000     | MNT          | [mantlescan.xyz](https://mantlescan.xyz)                           |
+| Kaia              | 8217     | KAIA         | [kaiascan.io](https://kaiascan.io)                                 |
+| Base              | 8453     | ETH          | [basescan.org](https://basescan.org)                               |
+| Mode              | 34443    | ETH          | [modescan.io](https://modescan.io)                                 |
+| Arbitrum One      | 42161    | ETH          | [arbiscan.io](https://arbiscan.io)                                 |
+| Arbitrum Nova     | 42170    | ETH          | [nova.arbiscan.io](https://nova.arbiscan.io)                       |
+| Celo              | 42220    | CELO         | [celoscan.io](https://celoscan.io)                                 |
+| Avalanche C-Chain | 43114    | AVAX         | [snowtrace.io](https://snowtrace.io)                               |
+| Linea             | 59144    | ETH          | [lineascan.build](https://lineascan.build)                         |
+| Berachain         | 80094    | BERA         | [berascan.com](https://berascan.com)                               |
+| Blast             | 81457    | ETH          | [blastscan.io](https://blastscan.io)                               |
+| Taiko             | 167000   | ETH          | [taikoscan.io](https://taikoscan.io)                               |
+| Scroll            | 534352   | ETH          | [scrollscan.com](https://scrollscan.com)                           |
+| Zora              | 7777777  | ETH          | [explorer.zora.energy](https://explorer.zora.energy)               |
+
+### Testnet chains
+
+| Chain        | Chain ID | Native token |
+| ------------ | -------- | ------------ |
+| Sepolia      | 11155111 | ETH          |
+| Base Sepolia | 84532    | ETH          |
+
+### Adding a chain
+
+Admins can add new chains via the admin API:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/admin/chains" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-chain",
+    "display_name": "My Chain",
+    "chain_id": 12345,
+    "rpc_url": "https://rpc.mychain.io",
+    "explorer_url": "https://explorer.mychain.io",
+    "native_currency": "MCH"
+  }'
+```
+
+See the [Admin API reference](/docs/reference/api-reference#admin) for update and delete endpoints.
+
+---
+
+## Security model
+
+- **Keys never leave the HSM boundary** — the vault decrypts the key, signs the transaction, and zeroes the memory. The plaintext key is never returned to the caller.
+- **Full audit trail** — every transaction is logged with the agent ID, chain, recipient, value, and resulting `tx_hash`.
+- **Policy enforcement** — the agent still needs a policy granting access to the vault path that holds the signing key. The proxy doesn't bypass access control.
+- **Rate limiting** — standard rate limits apply to transaction endpoints.
+
+## Best practices
+
+1. **One key per agent** — give each agent its own signing key in its own vault path so you can revoke independently.
+2. **Set `expires_at`** — register agents with an expiry so leaked API keys have a bounded blast radius.
+3. **Use scoped policies** — grant the agent access only to the specific vault path containing its signing key, not the entire vault.
+4. **Monitor transactions** — query `GET /v1/agents/:id/transactions` regularly or set up audit webhooks.
+5. **Use testnets first** — store a testnet key (Sepolia, Base Sepolia) and verify the flow before moving to mainnet.
 
 
 ---
@@ -1127,12 +1612,13 @@ sidebar_position: 4
 
 ## Share types
 
-| `recipient_type`   | Description                                                 |
-| ------------------ | ----------------------------------------------------------- |
-| `user`             | Direct share to an existing 1Claw user by ID                |
-| `agent`            | Direct share to a registered agent by ID                    |
-| `external_email`   | Invite-by-email — the recipient doesn't need an account yet |
-| `anyone_with_link` | Anyone with the share URL can access                        |
+| `recipient_type`   | Description                                                                     |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `creator`          | Share back with the human who registered this agent (agents only, no ID needed) |
+| `user`             | Direct share to an existing 1Claw user by ID                                    |
+| `agent`            | Direct share to a registered agent by ID                                        |
+| `external_email`   | Invite-by-email — the recipient doesn't need an account yet (humans only)       |
+| `anyone_with_link` | Anyone with the share URL can access                                            |
 
 ## Create a share
 
@@ -1161,16 +1647,39 @@ curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
 }
 ```
 
+## Agent-to-human sharing (creator)
+
+The simplest way for an agent to share a secret back with the human who owns it:
+
+```bash
+curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_type": "creator",
+    "expires_at": "2026-03-15T00:00:00Z",
+    "max_access_count": 5
+  }'
+```
+
+The backend resolves the agent's `created_by` field to identify the human. No user UUID or email needed. The human sees the share in their **Inbound** shares and accepts it.
+
+**Via MCP:**
+
+```
+share_secret(secret_id: "...", recipient_type: "creator", expires_at: "2026-12-31T00:00:00Z")
+```
+
 ## Invite-by-email flow
 
-When you share with `recipient_type: "external_email"`:
+When a human shares with `recipient_type: "external_email"`:
 
 1. A share record is created with the recipient's email.
 2. The recipient receives an email notification with a link to sign in.
 3. When the recipient signs up or logs in with that email, all pending shares are **automatically claimed** — they appear in the recipient's account.
 4. The recipient can then access the shared secret through the API or dashboard.
 
-This means agents can share secrets with humans who don't have accounts yet. The human simply signs up with the invited email address and their shares are waiting.
+Note: only humans can create email-based shares — agents are blocked from this type to prevent email spam.
 
 ## Access a share
 
@@ -1340,13 +1849,14 @@ Creates a new agent identity and returns an **API key** (`ocv_...`). The key is 
 
 ## Request body
 
-| Field       | Type   | Required | Description |
-|------------|--------|----------|-------------|
-| name       | string | ✅       | Display name for the agent |
-| description| string | ❌       | Optional description |
-| auth_method| string | ❌       | Default `api_key` |
-| scopes     | array  | ❌       | Optional scope strings |
-| expires_at | string | ❌       | ISO 8601; agent token exchange fails after this |
+| Field                | Type    | Required | Description                                                                                                                                                                                                                                                     |
+| -------------------- | ------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name                 | string  | ✅       | Display name for the agent                                                                                                                                                                                                                                      |
+| description          | string  | ❌       | Optional description                                                                                                                                                                                                                                            |
+| auth_method          | string  | ❌       | Default `api_key`                                                                                                                                                                                                                                               |
+| scopes               | array   | ❌       | Optional scope strings                                                                                                                                                                                                                                          |
+| expires_at           | string  | ❌       | ISO 8601; agent token exchange fails after this                                                                                                                                                                                                                 |
+| crypto_proxy_enabled | boolean | ❌       | Default `false`. When `true`, the agent **must** use the transaction proxy to broadcast crypto transactions and is **blocked** from reading `private_key` and `ssh_key` type secrets directly. See [Crypto Transaction Proxy](#crypto-transaction-proxy) below. |
 
 ## Example request
 
@@ -1355,8 +1865,9 @@ curl -X POST "https://api.1claw.xyz/v1/agents" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "CI Agent",
-    "description": "GitHub Actions deploy",
+    "name": "DeFi Bot",
+    "description": "Automated trading agent",
+    "crypto_proxy_enabled": true,
     "scopes": ["vaults:read"]
   }'
 ```
@@ -1365,20 +1876,44 @@ curl -X POST "https://api.1claw.xyz/v1/agents" \
 
 ```json
 {
-  "agent": {
-    "id": "ec7e0226-30f0-4dda-b169-f060a3502603",
-    "name": "CI Agent",
-    "description": "GitHub Actions deploy",
-    "auth_method": "api_key",
-    "scopes": ["vaults:read"],
-    "is_active": true,
-    "created_at": "2026-02-18T12:00:00Z"
-  },
-  "api_key": "ocv_W3_eYj0BSdTjChKwCKRYuZJacmmhVn4ozWIxHV-zlEs"
+    "agent": {
+        "id": "ec7e0226-30f0-4dda-b169-f060a3502603",
+        "name": "DeFi Bot",
+        "description": "Automated trading agent",
+        "auth_method": "api_key",
+        "scopes": ["vaults:read"],
+        "is_active": true,
+        "crypto_proxy_enabled": true,
+        "created_at": "2026-02-18T12:00:00Z"
+    },
+    "api_key": "ocv_W3_eYj0BSdTjChKwCKRYuZJacmmhVn4ozWIxHV-zlEs"
 }
 ```
 
 Store the `api_key` securely; it cannot be retrieved again. Use [Deactivate agent / Rotate key](/docs/human-api/agents/deactivate-agent#rotate-agent-key) to get a new key if needed.
+
+## Crypto Transaction Proxy
+
+When `crypto_proxy_enabled` is set to `true`:
+
+1. **Transaction proxy access** — The agent can call `POST /v1/agents/:id/transactions` to submit transactions that the signing proxy will broadcast using keys stored in the vault.
+
+2. **Private key reads blocked** — The agent is **blocked** from reading secrets of type `private_key` or `ssh_key` through the normal `GET /v1/vaults/:vault_id/secrets/:path` endpoint. Any attempt returns `403 Forbidden`.
+
+3. **Other secrets unaffected** — The agent can still read `api_key`, `password`, `certificate`, `env_bundle`, and other secret types normally (subject to policies).
+
+This enforcement means the agent can never exfiltrate raw signing keys — it can only request that the server sign and broadcast transactions on its behalf.
+
+### When to enable
+
+- The agent needs to initiate financial transactions (swaps, transfers, contract calls)
+- You want to prevent the agent from ever seeing the raw private key
+- You want a full audit trail of every transaction the agent submits
+
+### When to leave disabled
+
+- The agent only needs to read API keys, passwords, or config secrets
+- The agent doesn't interact with blockchain transactions
 
 
 ---
@@ -1577,19 +2112,21 @@ sidebar_position: 0
 
 Policies link a **principal** (user or agent) to **secret path patterns** with a set of **permissions** (e.g. read, write, delete). Path matching uses globs: `*` for one segment, `**` for any depth.
 
+In the **dashboard** at [1claw.xyz](https://1claw.xyz), use **Vaults → [vault] → Policies → Create Policy**. You can select the target vault from a dropdown and, for agents, pick from your registered agents or enter a custom agent ID.
+
 **Endpoint:** `POST /v1/vaults/:vault_id/policies`  
 **Authentication:** Bearer JWT (vault access)
 
 ## Request body
 
-| Field                | Type   | Required | Description |
-|----------------------|--------|----------|-------------|
-| secret_path_pattern  | string | ✅       | Glob pattern (e.g. `**`, `prod/*`, `api-keys/*`) |
-| principal_type       | string | ✅       | `user` or `agent` |
-| principal_id         | string | ✅       | UUID of the user or agent |
-| permissions          | array  | ✅       | e.g. `["read"]`, `["read","write"]` |
-| conditions           | object | ❌       | Optional (e.g. ip_allowlist, time_window) |
-| expires_at           | string | ❌       | ISO 8601; policy stops applying after this time |
+| Field               | Type   | Required | Description                                      |
+| ------------------- | ------ | -------- | ------------------------------------------------ |
+| secret_path_pattern | string | ✅       | Glob pattern (e.g. `**`, `prod/*`, `api-keys/*`) |
+| principal_type      | string | ✅       | `user` or `agent`                                |
+| principal_id        | string | ✅       | UUID of the user or agent                        |
+| permissions         | array  | ✅       | e.g. `["read"]`, `["read","write"]`              |
+| conditions          | object | ❌       | Optional (e.g. ip_allowlist, time_window)        |
+| expires_at          | string | ❌       | ISO 8601; policy stops applying after this time  |
 
 ## Example request
 
@@ -1609,26 +2146,26 @@ curl -X POST "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c7
 
 ```json
 {
-  "id": "897b37da-a265-4bd4-818b-e716eeff3de3",
-  "vault_id": "ae370174-9aee-4b02-ba7c-d1519930c709",
-  "secret_path_pattern": "**",
-  "principal_type": "agent",
-  "principal_id": "ec7e0226-30f0-4dda-b169-f060a3502603",
-  "permissions": ["read"],
-  "conditions": {},
-  "created_by": "2a57eb5e-caac-4e34-9685-b94c37458eb1",
-  "created_at": "2026-02-18T12:00:00Z"
+    "id": "897b37da-a265-4bd4-818b-e716eeff3de3",
+    "vault_id": "ae370174-9aee-4b02-ba7c-d1519930c709",
+    "secret_path_pattern": "**",
+    "principal_type": "agent",
+    "principal_id": "ec7e0226-30f0-4dda-b169-f060a3502603",
+    "permissions": ["read"],
+    "conditions": {},
+    "created_by": "2a57eb5e-caac-4e34-9685-b94c37458eb1",
+    "created_at": "2026-02-18T12:00:00Z"
 }
 ```
 
 ## Error responses
 
-| Code | Meaning |
-|------|---------|
-| 400 | Validation error (e.g. empty permissions) |
-| 401 | Invalid or missing token |
-| 403 | Not allowed to create policies on this vault |
-| 404 | Vault not found |
+| Code | Meaning                                      |
+| ---- | -------------------------------------------- |
+| 400  | Validation error (e.g. empty permissions)    |
+| 401  | Invalid or missing token                     |
+| 403  | Not allowed to create policies on this vault |
+| 404  | Vault not found                              |
 
 
 ---
@@ -1659,26 +2196,28 @@ curl -s "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/po
 
 ```json
 {
-  "policies": [
-    {
-      "id": "897b37da-a265-4bd4-818b-e716eeff3de3",
-      "vault_id": "ae370174-9aee-4b02-ba7c-d1519930c709",
-      "secret_path_pattern": "**",
-      "principal_type": "agent",
-      "principal_id": "ec7e0226-30f0-4dda-b169-f060a3502603",
-      "permissions": ["read"],
-      "conditions": {},
-      "created_by": "2a57eb5e-caac-4e34-9685-b94c37458eb1",
-      "created_at": "2026-02-18T12:00:00Z"
-    }
-  ]
+    "policies": [
+        {
+            "id": "897b37da-a265-4bd4-818b-e716eeff3de3",
+            "vault_id": "ae370174-9aee-4b02-ba7c-d1519930c709",
+            "secret_path_pattern": "**",
+            "principal_type": "agent",
+            "principal_id": "ec7e0226-30f0-4dda-b169-f060a3502603",
+            "permissions": ["read"],
+            "conditions": {},
+            "created_by": "2a57eb5e-caac-4e34-9685-b94c37458eb1",
+            "created_at": "2026-02-18T12:00:00Z"
+        }
+    ]
 }
 ```
 
 ## Update a policy
 
 **Endpoint:** `PUT /v1/vaults/:vault_id/policies/:policy_id`  
-**Body:** Optional `permissions`, `conditions`, `expires_at` (and possibly `secret_path_pattern`). Omitted fields may be left unchanged depending on implementation.
+**Body:** `permissions` (array), optional `conditions` (object), optional `expires_at` (ISO 8601). Only these fields can be updated; path pattern and principal are fixed after creation.
+
+In the **dashboard**, open **Vaults → [vault] → Policies** and click the pencil (edit) icon on a policy to change permissions, conditions, or expiry. Use the trash icon to delete a policy.
 
 
 ---
@@ -2767,25 +3306,33 @@ Access granted to agent abc123 on vault prod-keys.
 
 ## share_secret
 
-Share a secret with someone via email. The recipient doesn't need a 1Claw account — they'll receive an email invitation and the share will be claimed when they sign up or log in.
+Share a secret with your creator (the human who registered you), a specific user or agent by ID, or create an open link. Use `recipient_type: "creator"` for the simplest agent-to-human sharing — no UUID or email needed.
 
 ### Parameters
 
 | Name               | Type   | Required | Description                                                    |
 | ------------------ | ------ | -------- | -------------------------------------------------------------- |
 | `secret_id`        | string | Yes      | UUID of the secret to share                                    |
-| `email`            | string | Yes      | Recipient's email address                                      |
+| `recipient_type`   | string | Yes      | `creator`, `user`, `agent`, or `anyone_with_link`              |
+| `recipient_id`     | string | No       | UUID of the user or agent (required for `user`/`agent` types)  |
 | `expires_at`       | string | Yes      | ISO 8601 expiry datetime (e.g. `2026-03-01T00:00:00Z`)         |
 | `max_access_count` | number | No       | Maximum number of times the share can be accessed (default: 5) |
 
-### Example
+### Examples
 
 ```
-Agent: "Share the Stripe API key with alice@example.com"
-→ share_secret(secret_id: "cf592...", email: "alice@example.com", max_access_count: 3)
+Agent: "Share this key with the person who set me up"
+→ share_secret(secret_id: "cf592...", recipient_type: "creator", expires_at: "2026-03-01T00:00:00Z")
 
-Secret shared with alice@example.com. Share ID: df703...
-They'll receive an email and can access the secret after signing in.
+Secret shared with your creator. Share ID: df703...
+The recipient must accept the share before they can access the secret.
+```
+
+```
+Agent: "Share this with agent abc123"
+→ share_secret(secret_id: "cf592...", recipient_type: "agent", recipient_id: "abc123", max_access_count: 3)
+
+Secret shared with agent abc123. Share ID: ef814...
 ```
 
 
@@ -3028,11 +3575,11 @@ An agent accesses secrets that a human has shared. Exchange an API key for a JWT
 
 ## Prerequisites
 
-| Requirement | Details |
-|---|---|
-| **Account** | Sign up at [1claw.xyz](https://1claw.xyz) (free tier: 1,000 requests/month) |
-| **curl** | All examples use `curl`; any HTTP client works |
-| **Base URL** | `https://api.1claw.xyz` |
+| Requirement  | Details                                                                     |
+| ------------ | --------------------------------------------------------------------------- |
+| **Account**  | Sign up at [1claw.xyz](https://1claw.xyz) (free tier: 1,000 requests/month) |
+| **curl**     | All examples use `curl`; any HTTP client works                              |
+| **Base URL** | `https://api.1claw.xyz`                                                     |
 
 
 ---
@@ -3314,6 +3861,15 @@ curl -s -X DELETE "$API/v1/agents/$AGENT_ID" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
+### Agent self-inspection
+
+```bash
+# Get the agent's own profile (includes created_by — the human who registered it)
+curl -s "$API/v1/agents/me" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  | python3 -m json.tool
+```
+
 ### Agent authentication
 
 ```bash
@@ -3338,12 +3894,24 @@ curl -s "$API/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
 ## 8. Sharing
 
 ```bash
-# Create a share (by secret ID, with email invite)
+# Agent shares a secret back with its creator (the human who registered it)
+curl -s -X POST "$API/v1/secrets/<secret_id>/share" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_type": "creator",
+    "expires_at": "2026-03-01T00:00:00Z",
+    "max_access_count": 5
+  }' \
+  | python3 -m json.tool
+
+# Create a share (by secret ID, with email invite — humans only)
 curl -s -X POST "$API/v1/secrets/<secret_id>/share" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "recipient_email": "colleague@example.com",
+    "recipient_type": "external_email",
+    "email": "colleague@example.com",
     "expires_at": "2026-03-01T00:00:00Z",
     "max_access_count": 5
   }' \
@@ -3398,7 +3966,7 @@ curl -s "$API/v1/chains/1" \
 
 ## 10. Transactions (Crypto Proxy)
 
-The agent must have `crypto_proxy_enabled: true`. Use the agent's JWT.
+The agent must have `crypto_proxy_enabled: true`. Use the agent's JWT. When enabled, the agent is blocked from reading `private_key` and `ssh_key` secrets directly — it must use these proxy endpoints instead.
 
 ```bash
 # Submit a transaction
@@ -3595,17 +4163,17 @@ Or add to your MCP client configuration (e.g. Claude Desktop, Cursor):
 
 ```json
 {
-  "mcpServers": {
-    "1claw": {
-      "command": "npx",
-      "args": ["-y", "@1claw/mcp"],
-      "env": {
-        "ONECLAW_API_URL": "https://api.1claw.xyz",
-        "ONECLAW_AGENT_ID": "<agent-uuid>",
-        "ONECLAW_API_KEY": "ocv_..."
-      }
+    "mcpServers": {
+        "1claw": {
+            "command": "npx",
+            "args": ["-y", "@1claw/mcp"],
+            "env": {
+                "ONECLAW_API_URL": "https://api.1claw.xyz",
+                "ONECLAW_AGENT_ID": "<agent-uuid>",
+                "ONECLAW_API_KEY": "ocv_..."
+            }
+        }
     }
-  }
 }
 ```
 
@@ -3812,145 +4380,159 @@ All endpoints are under **/v1**.
 
 ## Public (no auth)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/health` | Service health |
-| GET | `/v1/health/hsm` | HSM connectivity |
-| GET | `/v1/share/:share_id` | Access a shared secret (checks expiry + access count) |
+| Method | Path                  | Description                                           |
+| ------ | --------------------- | ----------------------------------------------------- |
+| GET    | `/v1/health`          | Service health                                        |
+| GET    | `/v1/health/hsm`      | HSM connectivity                                      |
+| GET    | `/v1/share/:share_id` | Access a shared secret (checks expiry + access count) |
 
 ## Authentication
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/auth/signup` | Self-service signup (email + password) → JWT |
-| POST | `/v1/auth/token` | Email/password → JWT |
-| POST | `/v1/auth/agent-token` | Agent ID + API key → JWT |
-| POST | `/v1/auth/api-key-token` | Personal API key → JWT |
-| POST | `/v1/auth/google` | Google id_token → JWT |
-| POST | `/v1/auth/refresh` | Refresh token → new JWT |
-| DELETE | `/v1/auth/token` | Revoke token |
-| POST | `/v1/auth/change-password` | Change password |
+| Method | Path                       | Description                                  |
+| ------ | -------------------------- | -------------------------------------------- |
+| POST   | `/v1/auth/signup`          | Self-service signup (email + password) → JWT |
+| POST   | `/v1/auth/token`           | Email/password → JWT                         |
+| POST   | `/v1/auth/agent-token`     | Agent ID + API key → JWT                     |
+| POST   | `/v1/auth/api-key-token`   | Personal API key → JWT                       |
+| POST   | `/v1/auth/google`          | Google id_token → JWT                        |
+| POST   | `/v1/auth/refresh`         | Refresh token → new JWT                      |
+| DELETE | `/v1/auth/token`           | Revoke token                                 |
+| POST   | `/v1/auth/change-password` | Change password                              |
 
 ## Personal API Keys
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/auth/api-keys` | Create API key |
-| GET | `/v1/auth/api-keys` | List API keys |
+| Method | Path                        | Description    |
+| ------ | --------------------------- | -------------- |
+| POST   | `/v1/auth/api-keys`         | Create API key |
+| GET    | `/v1/auth/api-keys`         | List API keys  |
 | DELETE | `/v1/auth/api-keys/:key_id` | Revoke API key |
 
 ## Vaults
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/vaults` | Create vault |
-| GET | `/v1/vaults` | List vaults |
-| GET | `/v1/vaults/:vault_id` | Get vault |
+| Method | Path                   | Description  |
+| ------ | ---------------------- | ------------ |
+| POST   | `/v1/vaults`           | Create vault |
+| GET    | `/v1/vaults`           | List vaults  |
+| GET    | `/v1/vaults/:vault_id` | Get vault    |
 | DELETE | `/v1/vaults/:vault_id` | Delete vault |
 
 ## Secrets
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/vaults/:vault_id/secrets` | List secrets (metadata only) |
-| PUT | `/v1/vaults/:vault_id/secrets/*path` | Create or update secret |
-| GET | `/v1/vaults/:vault_id/secrets/*path` | Get secret value (decrypted) |
-| DELETE | `/v1/vaults/:vault_id/secrets/*path` | Soft-delete secret |
+| Method | Path                                 | Description                  |
+| ------ | ------------------------------------ | ---------------------------- |
+| GET    | `/v1/vaults/:vault_id/secrets`       | List secrets (metadata only) |
+| PUT    | `/v1/vaults/:vault_id/secrets/*path` | Create or update secret      |
+| GET    | `/v1/vaults/:vault_id/secrets/*path` | Get secret value (decrypted) |
+| DELETE | `/v1/vaults/:vault_id/secrets/*path` | Soft-delete secret           |
 
 ## Policies
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/vaults/:vault_id/policies` | Create policy |
-| GET | `/v1/vaults/:vault_id/policies` | List policies |
-| PUT | `/v1/vaults/:vault_id/policies/:policy_id` | Update policy |
+| Method | Path                                       | Description   |
+| ------ | ------------------------------------------ | ------------- |
+| POST   | `/v1/vaults/:vault_id/policies`            | Create policy |
+| GET    | `/v1/vaults/:vault_id/policies`            | List policies |
+| PUT    | `/v1/vaults/:vault_id/policies/:policy_id` | Update policy |
 | DELETE | `/v1/vaults/:vault_id/policies/:policy_id` | Delete policy |
 
 ## Agents
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/agents` | Register agent |
-| GET | `/v1/agents` | List agents |
-| GET | `/v1/agents/:agent_id` | Get agent |
-| PATCH | `/v1/agents/:agent_id` | Update agent (name, description, crypto_proxy_enabled) |
-| DELETE | `/v1/agents/:agent_id` | Deactivate agent |
-| POST | `/v1/agents/:agent_id/rotate-key` | Rotate agent API key |
+| Method | Path                              | Description                                             |
+| ------ | --------------------------------- | ------------------------------------------------------- |
+| POST   | `/v1/agents`                      | Register agent                                          |
+| GET    | `/v1/agents`                      | List agents                                             |
+| GET    | `/v1/agents/me`                   | Get calling agent's own profile (includes `created_by`) |
+| GET    | `/v1/agents/:agent_id`            | Get agent                                               |
+| PATCH  | `/v1/agents/:agent_id`            | Update agent (name, description, crypto_proxy_enabled)  |
+| DELETE | `/v1/agents/:agent_id`            | Deactivate agent                                        |
+| POST   | `/v1/agents/:agent_id/rotate-key` | Rotate agent API key                                    |
 
 ## Sharing
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/secrets/:secret_id/share` | Create share (supports email invites) |
-| GET | `/v1/shares/outbound` | List shares you created |
-| GET | `/v1/shares/inbound` | List shares sent to you |
-| POST | `/v1/shares/:share_id/accept` | Accept an inbound share |
-| POST | `/v1/shares/:share_id/decline` | Decline an inbound share |
-| DELETE | `/v1/share/:share_id` | Revoke share (creator only) |
+| Method | Path                           | Description                                                                     |
+| ------ | ------------------------------ | ------------------------------------------------------------------------------- |
+| POST   | `/v1/secrets/:secret_id/share` | Create share (`creator`, `user`, `agent`, `external_email`, `anyone_with_link`) |
+| GET    | `/v1/shares/outbound`          | List shares you created                                                         |
+| GET    | `/v1/shares/inbound`           | List shares sent to you                                                         |
+| POST   | `/v1/shares/:share_id/accept`  | Accept an inbound share                                                         |
+| POST   | `/v1/shares/:share_id/decline` | Decline an inbound share                                                        |
+| DELETE | `/v1/share/:share_id`          | Revoke share (creator only)                                                     |
 
 ## Chains
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/chains` | List supported blockchain chains |
-| GET | `/v1/chains/:identifier` | Get chain by ID or chain_id |
+| Method | Path                     | Description                      |
+| ------ | ------------------------ | -------------------------------- |
+| GET    | `/v1/chains`             | List supported blockchain chains |
+| GET    | `/v1/chains/:identifier` | Get chain by ID or chain_id      |
 
 ## Transactions (Crypto Proxy)
 
-Requires `crypto_proxy_enabled: true` on the agent.
+Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is also **blocked** from reading `private_key` and `ssh_key` type secrets through the standard secrets endpoint — it must use the proxy to sign transactions.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/agents/:agent_id/transactions` | Submit a transaction |
-| GET | `/v1/agents/:agent_id/transactions` | List agent transactions |
-| GET | `/v1/agents/:agent_id/transactions/:tx_id` | Get transaction details |
+| Method | Path                                       | Description             |
+| ------ | ------------------------------------------ | ----------------------- |
+| POST   | `/v1/agents/:agent_id/transactions`        | Submit a transaction    |
+| GET    | `/v1/agents/:agent_id/transactions`        | List agent transactions |
+| GET    | `/v1/agents/:agent_id/transactions/:tx_id` | Get transaction details |
 
 ## Billing & Usage
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/billing/usage` | Usage summary (current period) |
-| GET | `/v1/billing/history` | Usage history |
+| Method | Path                  | Description                    |
+| ------ | --------------------- | ------------------------------ |
+| GET    | `/v1/billing/usage`   | Usage summary (current period) |
+| GET    | `/v1/billing/history` | Usage history                  |
+
+## Billing V2: Subscriptions & Credits
+
+| Method | Path                               | Description                                           |
+| ------ | ---------------------------------- | ----------------------------------------------------- |
+| POST   | `/v1/billing/subscribe`            | Start subscription checkout (Stripe)                  |
+| POST   | `/v1/billing/portal`               | Open Stripe customer portal                           |
+| GET    | `/v1/billing/subscription`         | Full subscription + usage + credits summary           |
+| POST   | `/v1/billing/credits/topup`        | Start credit top-up checkout (Stripe)                 |
+| GET    | `/v1/billing/credits/balance`      | Credit balance + expiring credits                     |
+| GET    | `/v1/billing/credits/transactions` | Paginated credit transaction ledger                   |
+| PATCH  | `/v1/billing/overage-method`       | Toggle overage method (credits or x402)               |
+| POST   | `/v1/billing/webhooks`             | Stripe webhook handler (no auth — signature verified) |
 
 ## Audit
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/audit/events` | Query audit events |
+| Method | Path               | Description        |
+| ------ | ------------------ | ------------------ |
+| GET    | `/v1/audit/events` | Query audit events |
 
 ## Organization
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/org/members` | List org members |
-| POST | `/v1/org/invite` | Invite member by email |
-| PATCH | `/v1/org/members/:user_id` | Update member role |
-| DELETE | `/v1/org/members/:user_id` | Remove member |
+| Method | Path                       | Description            |
+| ------ | -------------------------- | ---------------------- |
+| GET    | `/v1/org/members`          | List org members       |
+| POST   | `/v1/org/invite`           | Invite member by email |
+| PATCH  | `/v1/org/members/:user_id` | Update member role     |
+| DELETE | `/v1/org/members/:user_id` | Remove member          |
 
 ## Security (IP Rules)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/security/ip-rules` | List IP allow/block rules |
-| POST | `/v1/security/ip-rules` | Create IP rule |
-| DELETE | `/v1/security/ip-rules/:rule_id` | Delete IP rule |
+| Method | Path                             | Description               |
+| ------ | -------------------------------- | ------------------------- |
+| GET    | `/v1/security/ip-rules`          | List IP allow/block rules |
+| POST   | `/v1/security/ip-rules`          | Create IP rule            |
+| DELETE | `/v1/security/ip-rules/:rule_id` | Delete IP rule            |
 
 ## Admin
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/admin/settings` | List all settings |
-| PUT | `/v1/admin/settings/:key` | Update a setting |
-| DELETE | `/v1/admin/settings/:key` | Delete a setting |
-| GET | `/v1/admin/x402` | Get x402 payment config |
-| PUT | `/v1/admin/x402` | Update x402 payment config |
-| GET | `/v1/admin/users` | List all users (super-admin) |
-| GET | `/v1/admin/chains` | List chains (admin view) |
-| POST | `/v1/admin/chains` | Create chain |
-| PUT | `/v1/admin/chains/:chain_id` | Update chain |
-| DELETE | `/v1/admin/chains/:chain_id` | Delete chain |
-| GET | `/v1/admin/orgs/:org_id/limits` | Get org limits |
-| PUT | `/v1/admin/orgs/:org_id/limits` | Update org limits |
+| Method | Path                            | Description                  |
+| ------ | ------------------------------- | ---------------------------- |
+| GET    | `/v1/admin/settings`            | List all settings            |
+| PUT    | `/v1/admin/settings/:key`       | Update a setting             |
+| DELETE | `/v1/admin/settings/:key`       | Delete a setting             |
+| GET    | `/v1/admin/x402`                | Get x402 payment config      |
+| PUT    | `/v1/admin/x402`                | Update x402 payment config   |
+| GET    | `/v1/admin/users`               | List all users (super-admin) |
+| GET    | `/v1/admin/chains`              | List chains (admin view)     |
+| POST   | `/v1/admin/chains`              | Create chain                 |
+| PUT    | `/v1/admin/chains/:chain_id`    | Update chain                 |
+| DELETE | `/v1/admin/chains/:chain_id`    | Delete chain                 |
+| GET    | `/v1/admin/orgs/:org_id/limits` | Get org limits               |
+| PUT    | `/v1/admin/orgs/:org_id/limits` | Update org limits            |
 
 ---
 
@@ -3983,6 +4565,21 @@ For detailed release history, see the [1clawAI GitHub](https://github.com/1clawA
 The **/v1** API is stable. Breaking changes would be accompanied by a new version prefix or clear deprecation notices. New optional fields or endpoints are added in a backward-compatible way.
 
 ## 2026-02 (latest)
+
+### Dashboard UX — CopyableId
+
+- **New:** One-click copy for every UUID, path, and identifier across the dashboard. Vault IDs, agent IDs, principal IDs, audit actor/resource IDs, API key prefixes, secret paths, and user/org IDs in the sidebar — all clickable with tooltip confirmation.
+
+### Quota exemption for platform admin orgs
+
+- **New:** `CallerIdentity.quota_exempt` flag resolved at authentication time. Platform admin org (and its agents) bypasses all billing checks. Cleaner than per-route overrides — single source of truth in auth middleware.
+
+### Policy UI improvements
+
+- **New:** Vault selector dropdown on Create Access Policy page — pick any vault, not just the one in the URL.
+- **New:** Agent principal picker — select from existing agents or type a custom agent ID.
+- **New:** Edit policy dialog — update permissions, conditions (JSON), and expiry on existing policies.
+- **New:** Delete policy from the policies list page.
 
 ### Agent integration guide
 
@@ -4553,6 +5150,96 @@ sidebar_position: 1
 - **Read:** Load ciphertext + wrapped DEK → Unwrap DEK with KEK (KMS) → Decrypt ciphertext with DEK → Return plaintext.
 
 This is standard **envelope encryption**. Compromise of the database or application does not reveal secrets without KMS access.
+
+
+---
+
+## Two-factor authentication (2FA)
+
+---
+title: Two-factor authentication
+description: "TOTP-based two-factor authentication protects human logins with an authenticator app and recovery codes."
+sidebar_position: 5
+---
+
+# Two-factor authentication (2FA)
+
+1Claw supports TOTP-based two-factor authentication for human user accounts. When enabled, logging in requires both your password (or Google OAuth) **and** a 6-digit code from an authenticator app such as Google Authenticator, Authy, or 1Password.
+
+2FA is optional but recommended. It can be enabled and disabled from **Settings → Security** in the dashboard.
+
+## How it works
+
+### Setup
+
+1. Navigate to **Settings → Security** in the dashboard.
+2. Click **Enable 2FA**.
+3. Scan the QR code with your authenticator app, or enter the secret key manually.
+4. Enter the 6-digit code from your app to verify.
+5. Save your **8 recovery codes** in a safe place. Each code can only be used once.
+
+### Login with 2FA
+
+1. Enter your email/password or sign in with Google as usual.
+2. If 2FA is enabled, the server responds with a short-lived MFA challenge token instead of a session JWT.
+3. The dashboard prompts you for a 6-digit code from your authenticator app.
+4. Enter the code (or a recovery code) to complete sign-in.
+
+### Disabling 2FA
+
+1. Navigate to **Settings → Security**.
+2. Click **Disable 2FA**.
+3. Confirm by entering your current TOTP code or your account password.
+
+## Technical details
+
+| Property       | Value                                  |
+| -------------- | -------------------------------------- |
+| Algorithm      | TOTP (RFC 6238), SHA-1                 |
+| Digits         | 6                                      |
+| Step           | 30 seconds                             |
+| Skew           | ±1 step (clock drift tolerance)        |
+| Secret storage | AES-256-GCM encrypted at rest          |
+| Recovery codes | 8 codes, encrypted at rest, single-use |
+| MFA token TTL  | 5 minutes                              |
+
+### API endpoints
+
+| Endpoint                         | Auth                  | Description                                                |
+| -------------------------------- | --------------------- | ---------------------------------------------------------- |
+| `GET /v1/auth/mfa/status`        | Bearer JWT            | Returns whether MFA is enabled                             |
+| `POST /v1/auth/mfa/setup`        | Bearer JWT            | Generates TOTP secret and returns QR code URI              |
+| `POST /v1/auth/mfa/verify-setup` | Bearer JWT            | Verifies initial code, enables MFA, returns recovery codes |
+| `POST /v1/auth/mfa/verify`       | None (uses MFA token) | Validates TOTP code during login, returns session JWT      |
+| `DELETE /v1/auth/mfa`            | Bearer JWT            | Disables MFA (requires TOTP code or password)              |
+
+### MFA challenge flow
+
+When a user with 2FA enabled authenticates via `POST /v1/auth/token` or `POST /v1/auth/google`, the server returns:
+
+```json
+{
+    "mfa_required": true,
+    "mfa_token": "<short-lived-jwt>",
+    "access_token": "",
+    "token_type": "Bearer",
+    "expires_in": 300
+}
+```
+
+The client then calls `POST /v1/auth/mfa/verify` with the `mfa_token` and the user's TOTP code to receive the real session JWT.
+
+### Encryption
+
+TOTP secrets and recovery codes are encrypted with AES-256-GCM using a server-side key configured via the `ONECLAW_TOTP_ENCRYPTION_KEY` environment variable (64 hex characters = 32 bytes). In development mode, if the variable is not set, a key is derived automatically.
+
+## Scope
+
+2FA applies only to **human user logins** (email/password and Google OAuth). It does not apply to:
+
+- Agent authentication (agents use API keys, not passwords)
+- Personal API key authentication (`1ck_` keys)
+- MCP server connections (token-based)
 
 
 ---

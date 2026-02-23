@@ -15,10 +15,10 @@ Agents authenticate by exchanging an **agent ID** and **API key** for a short-li
 
 ## Request body
 
-| Field     | Type   | Required | Description |
-|----------|--------|----------|-------------|
+| Field    | Type   | Required | Description                           |
+| -------- | ------ | -------- | ------------------------------------- |
 | agent_id | string | ✅       | UUID of the agent (from registration) |
-| api_key  | string | ✅       | Agent API key (e.g. `ocv_...`) |
+| api_key  | string | ✅       | Agent API key (e.g. `ocv_...`)        |
 
 ## Example request
 
@@ -35,9 +35,9 @@ curl -X POST https://api.1claw.xyz/v1/auth/agent-token \
 
 ```json
 {
-  "access_token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
-  "token_type": "Bearer",
-  "expires_in": 3600
+    "access_token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+    "token_type": "Bearer",
+    "expires_in": 3600
 }
 ```
 
@@ -49,8 +49,8 @@ The issued JWT includes a `scopes` claim. If the agent record has scopes set (e.
 
 ## Error responses
 
-| Code | Meaning |
-|------|---------|
-| 401 | Invalid agent_id or api_key, agent inactive, or agent expired |
+| Code | Meaning                                                       |
+| ---- | ------------------------------------------------------------- |
+| 401  | Invalid agent_id or api_key, agent inactive, or agent expired |
 
 Never log or expose the API key; treat it like a password.

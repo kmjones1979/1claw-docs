@@ -14,6 +14,17 @@ The **/v1** API is stable. Breaking changes would be accompanied by a new versio
 
 ## 2026-02 (latest)
 
+### Security audit hardening
+
+- **New:** Per-agent transaction guardrails — `tx_allowed_chains`, `tx_to_allowlist`, `tx_max_value_eth`, `tx_daily_limit_eth` enforced before signing.
+- **New:** Audit hash chain — each event stores `prev_event_id` and SHA-256 `integrity_hash` for tamper detection.
+- **New:** x402 payment replay protection — payment proofs deduplicated via SHA-256 before facilitator verification.
+- **New:** Authorization enforcement on `delete_secret`, `list_secrets`, and `list_versions` (policy check, not just org membership).
+- **Improved:** CORS defaults to `https://1claw.xyz` in production (no more permissive `Any` fallback).
+- **Improved:** CSP removes `unsafe-inline` and `unsafe-eval` from `script-src`.
+- **Improved:** Global rate limiting middleware applied to all API routes.
+- **Improved:** Dependency overrides for `minimatch`, `ajv`, `hono` to address known CVEs.
+
 ### Dashboard UX — CopyableId
 
 - **New:** One-click copy for every UUID, path, and identifier across the dashboard. Vault IDs, agent IDs, principal IDs, audit actor/resource IDs, API key prefixes, secret paths, and user/org IDs in the sidebar — all clickable with tooltip confirmation.

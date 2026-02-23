@@ -27,4 +27,15 @@ Response shape: `{ "events": [ ... ], "count": N }`. Each event typically has id
 - Policy create/update/delete.
 - Agent registration, key rotation, deactivation.
 
+## Tamper-evident hash chain
+
+Every audit event includes a cryptographic hash chain that links it to the previous event:
+
+- `prev_event_id` — UUID of the immediately preceding event in the org's audit log.
+- `integrity_hash` — SHA-256 of `prev_hash|event_id|actor_id|action|resource_type|resource_id|timestamp`.
+
+This makes the audit log **append-only and tamper-evident**: modifying or deleting any event breaks the hash chain for all subsequent entries. You can verify integrity by walking the chain from the latest event back to the first (`prev_event_id = NULL`).
+
+## Best practices
+
 Use the audit log for compliance reviews, incident response, and access analysis. Export or forward events to your SIEM or logging pipeline as needed.

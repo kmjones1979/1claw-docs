@@ -180,11 +180,39 @@ See the [Admin API reference](/docs/reference/api-reference#admin) for update an
 
 ---
 
+## Transaction guardrails
+
+Per-agent controls can be set when registering or updating an agent to limit what transactions the proxy will sign:
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `tx_allowed_chains` | `string[]` | Restrict to specific chain names (e.g. `["ethereum", "base"]`). Empty = all chains allowed. |
+| `tx_to_allowlist` | `string[]` | Restrict recipient addresses. Empty = any address allowed. |
+| `tx_max_value_eth` | `string` | Maximum value per transaction in ETH (e.g. `"1.0"`). Null = no per-tx limit. |
+| `tx_daily_limit_eth` | `string` | Rolling 24-hour spend limit in ETH. Null = no daily limit. |
+
+```bash
+curl -X PATCH "https://api.1claw.xyz/v1/agents/$AGENT_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tx_allowed_chains": ["ethereum", "base"],
+    "tx_to_allowlist": ["0xSafeAddress1", "0xSafeAddress2"],
+    "tx_max_value_eth": "0.5",
+    "tx_daily_limit_eth": "5.0"
+  }'
+```
+
+When a transaction violates any guardrail, the proxy returns **403 Forbidden** with a descriptive `detail` message.
+
+---
+
 ## Security model
 
 - **Keys never leave the HSM boundary** — the vault decrypts the key, signs the transaction, and zeroes the memory. The plaintext key is never returned to the caller.
 - **Full audit trail** — every transaction is logged with the agent ID, chain, recipient, value, and resulting `tx_hash`.
 - **Policy enforcement** — the agent still needs a policy granting access to the vault path that holds the signing key. The proxy doesn't bypass access control.
+- **Transaction guardrails** — per-agent chain allowlists, recipient allowlists, per-tx caps, and daily spend limits enforced server-side before signing.
 - **Rate limiting** — standard rate limits apply to transaction endpoints.
 
 ## Best practices
