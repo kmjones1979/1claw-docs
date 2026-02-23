@@ -14,6 +14,21 @@ The **/v1** API is stable. Breaking changes would be accompanied by a new versio
 
 ## 2026-02 (latest)
 
+### Dashboard UX — CopyableId
+
+- **New:** One-click copy for every UUID, path, and identifier across the dashboard. Vault IDs, agent IDs, principal IDs, audit actor/resource IDs, API key prefixes, secret paths, and user/org IDs in the sidebar — all clickable with tooltip confirmation.
+
+### Quota exemption for platform admin orgs
+
+- **New:** `CallerIdentity.quota_exempt` flag resolved at authentication time. Platform admin org (and its agents) bypasses all billing checks. Cleaner than per-route overrides — single source of truth in auth middleware.
+
+### Policy UI improvements
+
+- **New:** Vault selector dropdown on Create Access Policy page — pick any vault, not just the one in the URL.
+- **New:** Agent principal picker — select from existing agents or type a custom agent ID.
+- **New:** Edit policy dialog — update permissions, conditions (JSON), and expiry on existing policies.
+- **New:** Delete policy from the policies list page.
+
 ### Agent integration guide
 
 - **New:** Agent detail page in the dashboard now includes a tabbed integration guide with copy-paste code snippets for TypeScript SDK, Python, curl, and MCP configuration.
