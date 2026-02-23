@@ -259,4 +259,4 @@ If your tier limit is exhausted and you have no credits (or x402 configured), th
 
 ## Enterprise
 
-For organizations with custom requirements, unlimited usage, dedicated support, or on-premise deployments, contact us at [enterprise@1claw.xyz](mailto:enterprise@1claw.xyz) to discuss Enterprise pricing and terms.
+For organizations with custom requirements, unlimited usage, dedicated support, or on-premise deployments, contact us at [ops@1claw.xyz](mailto:ops@1claw.xyz) to discuss Enterprise pricing and terms.
