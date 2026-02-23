@@ -41,4 +41,6 @@ curl -s "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/po
 ## Update a policy
 
 **Endpoint:** `PUT /v1/vaults/:vault_id/policies/:policy_id`  
-**Body:** Optional `permissions`, `conditions`, `expires_at` (and possibly `secret_path_pattern`). Omitted fields may be left unchanged depending on implementation.
+**Body:** `permissions` (array), optional `conditions` (object), optional `expires_at` (ISO 8601). Only these fields can be updated; path pattern and principal are fixed after creation.
+
+In the **dashboard**, open **Vaults → [vault] → Policies** and click the pencil (edit) icon on a policy to change permissions, conditions, or expiry. Use the trash icon to delete a policy.

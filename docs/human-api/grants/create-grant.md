@@ -8,6 +8,8 @@ sidebar_position: 0
 
 Policies link a **principal** (user or agent) to **secret path patterns** with a set of **permissions** (e.g. read, write, delete). Path matching uses globs: `*` for one segment, `**` for any depth.
 
+In the **dashboard** at [1claw.xyz](https://1claw.xyz), use **Vaults → [vault] → Policies → Create Policy**. You can select the target vault from a dropdown and, for agents, pick from your registered agents or enter a custom agent ID.
+
 **Endpoint:** `POST /v1/vaults/:vault_id/policies`  
 **Authentication:** Bearer JWT (vault access)
 
