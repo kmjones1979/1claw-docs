@@ -14,6 +14,19 @@ The **/v1** API is stable. Breaking changes would be accompanied by a new versio
 
 ## 2026-02 (latest)
 
+### Tenderly Transaction Simulation
+
+- **New:** `POST /v1/agents/:agent_id/transactions/simulate` — pre-flight simulation of EVM transactions via Tenderly. Returns balance changes, gas estimates, decoded errors, and a Tenderly dashboard deep-link. No signing or broadcasting occurs.
+- **New:** `POST /v1/agents/:agent_id/transactions/simulate-bundle` — simulate multiple sequential transactions (e.g. approve + swap).
+- **New:** `simulate_first` flag on `POST /v1/agents/:agent_id/transactions` — runs a Tenderly simulation before signing. If the simulation reverts, returns HTTP 422 and does not sign. Org admins can enforce this as mandatory via the `crypto_proxy.require_simulation` setting.
+- **New:** EIP-1559 (Type 2) transaction signing — set `max_fee_per_gas` and `max_priority_fee_per_gas` instead of legacy `gas_price`.
+- **New:** Automatic nonce resolution via `eth_getTransactionCount` RPC when `nonce` is omitted.
+- **New:** Address derivation from private key (secp256k1) — the simulation endpoint resolves the `from` address without exposing the key.
+- **New:** `simulate_transaction` MCP tool and `simulate_first` argument on the `submit_transaction` MCP tool (defaults to `true`).
+- **New:** `simulateTransaction()` and `simulateBundle()` methods in the TypeScript SDK.
+- **New:** Dashboard Transaction Builder on the agent detail page — simulate, review balance changes, then confirm and send.
+- **New:** Transaction history table on the agent detail page with simulation status badges and tx hash copy.
+
 ### Admin user management
 
 - **New:** `DELETE /v1/admin/users/:user_id` — platform admins can delete users. Cascades: delete share links created by the user, clear `agents.created_by`, then delete the user (device_auth_codes and user_api_keys CASCADE in DB). Cannot delete self or the last owner of the platform org.

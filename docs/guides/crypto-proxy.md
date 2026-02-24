@@ -94,18 +94,119 @@ curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/$TX_ID" \
   -H "Authorization: Bearer $AGENT_TOKEN"
 ```
 
-## MCP tool
+## Transaction simulation (Tenderly) {#simulation}
 
-If you're using the MCP server, the `submit_transaction` tool wraps the same endpoint:
+Every transaction can be simulated before signing. Simulation executes the full transaction against the current chain state in a sandboxed environment, returning decoded traces, balance changes, gas estimates, and human-readable error messages — without consuming real gas.
 
+### Standalone simulation
+
+Call the simulate endpoint to preview a transaction without committing:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.5",
+    "data": "0x",
+    "signing_key_path": "wallets/hot-wallet"
+  }'
+```
+
+The response includes:
+
+```json
+{
+  "simulation_id": "sim_a7e2c...",
+  "status": "success",
+  "gas_used": 21000,
+  "balance_changes": [
+    { "address": "0xSender...", "token": "ETH", "before": "2.5", "after": "1.99", "change": "-0.51" },
+    { "address": "0xRecipient...", "token": "ETH", "before": "0.0", "after": "0.5", "change": "+0.5" }
+  ],
+  "tenderly_dashboard_url": "https://dashboard.tenderly.co/..."
+}
+```
+
+### Simulate-then-sign (single call)
+
+Add `"simulate_first": true` to the standard transaction submission. The server simulates first; if the simulation reverts, it returns HTTP 422 and does **not** sign or broadcast:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.5",
+    "simulate_first": true
+  }'
+```
+
+### Bundle simulation
+
+Simulate multiple transactions sequentially (e.g. ERC-20 approve followed by a swap):
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate-bundle" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transactions": [
+      { "chain": "base", "to": "0xToken", "value": "0", "data": "0xapprove..." },
+      { "chain": "base", "to": "0xRouter", "value": "0", "data": "0xswap..." }
+    ]
+  }'
+```
+
+### Enforcing simulation
+
+Org admins can require simulation for all agent transactions by setting the `crypto_proxy.require_simulation` org setting to `"true"` via `PUT /v1/admin/settings/crypto_proxy.require_simulation`. When enabled, any transaction submitted without `simulate_first: true` will be automatically simulated, and reverts will block signing.
+
+### EIP-1559 (Type 2) transactions
+
+Set `max_fee_per_gas` and `max_priority_fee_per_gas` instead of `gas_price` to use EIP-1559 fee mode:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.1",
+    "max_fee_per_gas": "30000000000",
+    "max_priority_fee_per_gas": "1500000000",
+    "simulate_first": true
+  }'
+```
+
+## MCP tools
+
+The MCP server provides two transaction tools:
+
+**`simulate_transaction`** — simulate without signing:
+```
+Tool: simulate_transaction
+Args:
+  chain: "base"
+  to: "0xRecipientAddress"
+  value: "0.5"
+  signing_key_path: "wallets/hot-wallet"
+```
+
+**`submit_transaction`** — sign and broadcast (simulation on by default):
 ```
 Tool: submit_transaction
 Args:
-  chain_id: 8453
+  chain: "base"
   to: "0xRecipientAddress"
-  value: "500000000000000000"
-  data: "0x"
-  secret_path: "wallets/hot-wallet"
+  value: "0.5"
+  signing_key_path: "wallets/hot-wallet"
+  simulate_first: true
 ```
 
 ---

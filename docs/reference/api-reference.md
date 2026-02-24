@@ -107,11 +107,13 @@ All endpoints are under **/v1**.
 
 Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is also **blocked** from reading `private_key` and `ssh_key` type secrets through the standard secrets endpoint — it must use the proxy to sign transactions.
 
-| Method | Path                                       | Description             |
-| ------ | ------------------------------------------ | ----------------------- |
-| POST   | `/v1/agents/:agent_id/transactions`        | Submit a transaction    |
-| GET    | `/v1/agents/:agent_id/transactions`        | List agent transactions |
-| GET    | `/v1/agents/:agent_id/transactions/:tx_id` | Get transaction details |
+| Method | Path                                                | Description                                                    |
+| ------ | --------------------------------------------------- | -------------------------------------------------------------- |
+| POST   | `/v1/agents/:agent_id/transactions`                 | Submit a transaction (supports `simulate_first` flag)          |
+| GET    | `/v1/agents/:agent_id/transactions`                 | List agent transactions                                        |
+| GET    | `/v1/agents/:agent_id/transactions/:tx_id`          | Get transaction details                                        |
+| POST   | `/v1/agents/:agent_id/transactions/simulate`        | Simulate a transaction via Tenderly (no signing)               |
+| POST   | `/v1/agents/:agent_id/transactions/simulate-bundle` | Simulate a bundle of sequential transactions (approve + swap)  |
 
 ## Billing & Usage
 
