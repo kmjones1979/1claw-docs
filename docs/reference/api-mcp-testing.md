@@ -535,6 +535,10 @@ curl -s "$API/v1/admin/users" \
   -H "Authorization: Bearer $TOKEN" \
   | python3 -m json.tool
 
+# Delete user (platform admin only; cascade: share links, agent created_by)
+# curl -s -o /dev/null -w "%{http_code}" -X DELETE "$API/v1/admin/users/<user_id>" \
+#   -H "Authorization: Bearer $TOKEN"
+
 # Manage chains (admin)
 curl -s "$API/v1/admin/chains" \
   -H "Authorization: Bearer $TOKEN" \

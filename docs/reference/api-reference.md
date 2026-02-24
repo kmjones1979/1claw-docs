@@ -166,6 +166,7 @@ Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is a
 | GET    | `/v1/admin/x402`                | Get x402 payment config      |
 | PUT    | `/v1/admin/x402`                | Update x402 payment config   |
 | GET    | `/v1/admin/users`               | List all users (super-admin) |
+| DELETE | `/v1/admin/users/:user_id`      | Delete user (cascade; platform admin only) |
 | GET    | `/v1/admin/chains`              | List chains (admin view)     |
 | POST   | `/v1/admin/chains`              | Create chain                 |
 | PUT    | `/v1/admin/chains/:chain_id`    | Update chain                 |
