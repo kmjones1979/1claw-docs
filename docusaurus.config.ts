@@ -11,6 +11,8 @@ const config: Config = {
     organizationName: "1claw",
     projectName: "1claw-docs",
     onBrokenLinks: "throw",
+    // SSR/SSG: Docusaurus build produces static HTML for every page (including index).
+    trailingSlash: false,
     markdown: {
         hooks: {
             onBrokenMarkdownLinks: "warn",
@@ -32,6 +34,12 @@ const config: Config = {
                 blog: false,
                 theme: {
                     customCss: "./src/css/custom.css",
+                },
+                sitemap: {
+                    changefreq: "weekly",
+                    priority: 0.5,
+                    ignorePatterns: ["/tags/**"],
+                    lastmod: "date",
                 },
             } satisfies Preset.Options,
         ],
@@ -86,16 +94,42 @@ const config: Config = {
         },
         metadata: [
             {
+                name: "description",
+                content:
+                    "1claw documentation: cloud HSM secrets manager for humans and AI agents. Human API, Agent API, MCP server, SDKs, and guides.",
+            },
+            {
                 name: "keywords",
                 content:
-                    "HSM, secrets manager, AI agents, API keys, Claude, MCP, zero trust, cloud HSM",
+                    "1claw, HSM, secrets manager, AI agents, API keys, Claude, MCP, Model Context Protocol, zero trust, cloud HSM, vault, Cursor",
             },
+            // Open Graph
+            { property: "og:type", content: "website" },
+            { property: "og:url", content: "https://docs.1claw.xyz/" },
+            { property: "og:title", content: "1claw Docs — Cloud HSM Secrets Manager for Humans & AI Agents" },
+            {
+                property: "og:description",
+                content:
+                    "1claw documentation: cloud HSM secrets manager for humans and AI agents. Human API, Agent API, MCP server, SDKs, and guides.",
+            },
+            { property: "og:image", content: "https://docs.1claw.xyz/img/logo.svg" },
+            { property: "og:site_name", content: "1claw Docs" },
+            { property: "og:locale", content: "en_US" },
+            // Twitter
             { name: "twitter:card", content: "summary_large_image" },
+            { name: "twitter:title", content: "1claw Docs — Cloud HSM Secrets Manager for Humans & AI Agents" },
+            {
+                name: "twitter:description",
+                content:
+                    "1claw documentation: cloud HSM secrets manager for humans and AI agents. Human API, Agent API, MCP server, SDKs, and guides.",
+            },
         ],
+        // Sitemap is configured in the preset above; themeConfig.sitemap is also read by the plugin.
         sitemap: {
             changefreq: "weekly",
             priority: 0.5,
             ignorePatterns: ["/tags/**"],
+            lastmod: "date",
         },
     } satisfies Preset.ThemeConfig,
     plugins: [

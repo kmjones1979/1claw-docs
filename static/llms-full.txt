@@ -518,6 +518,17 @@ Response shape: `{ "events": [ ... ], "count": N }`. Each event typically has id
 - Policy create/update/delete.
 - Agent registration, key rotation, deactivation.
 
+## Tamper-evident hash chain
+
+Every audit event includes a cryptographic hash chain that links it to the previous event:
+
+- `prev_event_id` — UUID of the immediately preceding event in the org's audit log.
+- `integrity_hash` — SHA-256 of `prev_hash|event_id|actor_id|action|resource_type|resource_id|timestamp`.
+
+This makes the audit log **append-only and tamper-evident**: modifying or deleting any event breaks the hash chain for all subsequent entries. You can verify integrity by walking the chain from the latest event back to the first (`prev_event_id = NULL`).
+
+## Best practices
+
 Use the audit log for compliance reviews, incident response, and access analysis. Export or forward events to your SIEM or logging pipeline as needed.
 
 
@@ -1010,18 +1021,119 @@ curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/$TX_ID" \
   -H "Authorization: Bearer $AGENT_TOKEN"
 ```
 
-## MCP tool
+## Transaction simulation (Tenderly) {#simulation}
 
-If you're using the MCP server, the `submit_transaction` tool wraps the same endpoint:
+Every transaction can be simulated before signing. Simulation executes the full transaction against the current chain state in a sandboxed environment, returning decoded traces, balance changes, gas estimates, and human-readable error messages — without consuming real gas.
 
+### Standalone simulation
+
+Call the simulate endpoint to preview a transaction without committing:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.5",
+    "data": "0x",
+    "signing_key_path": "wallets/hot-wallet"
+  }'
+```
+
+The response includes:
+
+```json
+{
+  "simulation_id": "sim_a7e2c...",
+  "status": "success",
+  "gas_used": 21000,
+  "balance_changes": [
+    { "address": "0xSender...", "token": "ETH", "before": "2.5", "after": "1.99", "change": "-0.51" },
+    { "address": "0xRecipient...", "token": "ETH", "before": "0.0", "after": "0.5", "change": "+0.5" }
+  ],
+  "tenderly_dashboard_url": "https://dashboard.tenderly.co/..."
+}
+```
+
+### Simulate-then-sign (single call)
+
+Add `"simulate_first": true` to the standard transaction submission. The server simulates first; if the simulation reverts, it returns HTTP 422 and does **not** sign or broadcast:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.5",
+    "simulate_first": true
+  }'
+```
+
+### Bundle simulation
+
+Simulate multiple transactions sequentially (e.g. ERC-20 approve followed by a swap):
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate-bundle" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transactions": [
+      { "chain": "base", "to": "0xToken", "value": "0", "data": "0xapprove..." },
+      { "chain": "base", "to": "0xRouter", "value": "0", "data": "0xswap..." }
+    ]
+  }'
+```
+
+### Enforcing simulation
+
+Org admins can require simulation for all agent transactions by setting the `crypto_proxy.require_simulation` org setting to `"true"` via `PUT /v1/admin/settings/crypto_proxy.require_simulation`. When enabled, any transaction submitted without `simulate_first: true` will be automatically simulated, and reverts will block signing.
+
+### EIP-1559 (Type 2) transactions
+
+Set `max_fee_per_gas` and `max_priority_fee_per_gas` instead of `gas_price` to use EIP-1559 fee mode:
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.1",
+    "max_fee_per_gas": "30000000000",
+    "max_priority_fee_per_gas": "1500000000",
+    "simulate_first": true
+  }'
+```
+
+## MCP tools
+
+The MCP server provides two transaction tools:
+
+**`simulate_transaction`** — simulate without signing:
+```
+Tool: simulate_transaction
+Args:
+  chain: "base"
+  to: "0xRecipientAddress"
+  value: "0.5"
+  signing_key_path: "wallets/hot-wallet"
+```
+
+**`submit_transaction`** — sign and broadcast (simulation on by default):
 ```
 Tool: submit_transaction
 Args:
-  chain_id: 8453
+  chain: "base"
   to: "0xRecipientAddress"
-  value: "500000000000000000"
-  data: "0x"
-  secret_path: "wallets/hot-wallet"
+  value: "0.5"
+  signing_key_path: "wallets/hot-wallet"
+  simulate_first: true
 ```
 
 ---
@@ -1096,11 +1208,39 @@ See the [Admin API reference](/docs/reference/api-reference#admin) for update an
 
 ---
 
+## Transaction guardrails
+
+Per-agent controls can be set when registering or updating an agent to limit what transactions the proxy will sign:
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `tx_allowed_chains` | `string[]` | Restrict to specific chain names (e.g. `["ethereum", "base"]`). Empty = all chains allowed. |
+| `tx_to_allowlist` | `string[]` | Restrict recipient addresses. Empty = any address allowed. |
+| `tx_max_value_eth` | `string` | Maximum value per transaction in ETH (e.g. `"1.0"`). Null = no per-tx limit. |
+| `tx_daily_limit_eth` | `string` | Rolling 24-hour spend limit in ETH. Null = no daily limit. |
+
+```bash
+curl -X PATCH "https://api.1claw.xyz/v1/agents/$AGENT_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tx_allowed_chains": ["ethereum", "base"],
+    "tx_to_allowlist": ["0xSafeAddress1", "0xSafeAddress2"],
+    "tx_max_value_eth": "0.5",
+    "tx_daily_limit_eth": "5.0"
+  }'
+```
+
+When a transaction violates any guardrail, the proxy returns **403 Forbidden** with a descriptive `detail` message.
+
+---
+
 ## Security model
 
 - **Keys never leave the HSM boundary** — the vault decrypts the key, signs the transaction, and zeroes the memory. The plaintext key is never returned to the caller.
 - **Full audit trail** — every transaction is logged with the agent ID, chain, recipient, value, and resulting `tx_hash`.
 - **Policy enforcement** — the agent still needs a policy granting access to the vault path that holds the signing key. The proxy doesn't bypass access control.
+- **Transaction guardrails** — per-agent chain allowlists, recipient allowlists, per-tx caps, and daily spend limits enforced server-side before signing.
 - **Rate limiting** — standard rate limits apply to transaction endpoints.
 
 ## Best practices
@@ -4123,6 +4263,10 @@ curl -s "$API/v1/admin/users" \
   -H "Authorization: Bearer $TOKEN" \
   | python3 -m json.tool
 
+# Delete user (platform admin only; cascade: share links, agent created_by)
+# curl -s -o /dev/null -w "%{http_code}" -X DELETE "$API/v1/admin/users/<user_id>" \
+#   -H "Authorization: Bearer $TOKEN"
+
 # Manage chains (admin)
 curl -s "$API/v1/admin/chains" \
   -H "Authorization: Bearer $TOKEN" \
@@ -4468,11 +4612,13 @@ All endpoints are under **/v1**.
 
 Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is also **blocked** from reading `private_key` and `ssh_key` type secrets through the standard secrets endpoint — it must use the proxy to sign transactions.
 
-| Method | Path                                       | Description             |
-| ------ | ------------------------------------------ | ----------------------- |
-| POST   | `/v1/agents/:agent_id/transactions`        | Submit a transaction    |
-| GET    | `/v1/agents/:agent_id/transactions`        | List agent transactions |
-| GET    | `/v1/agents/:agent_id/transactions/:tx_id` | Get transaction details |
+| Method | Path                                                | Description                                                    |
+| ------ | --------------------------------------------------- | -------------------------------------------------------------- |
+| POST   | `/v1/agents/:agent_id/transactions`                 | Submit a transaction (supports `simulate_first` flag)          |
+| GET    | `/v1/agents/:agent_id/transactions`                 | List agent transactions                                        |
+| GET    | `/v1/agents/:agent_id/transactions/:tx_id`          | Get transaction details                                        |
+| POST   | `/v1/agents/:agent_id/transactions/simulate`        | Simulate a transaction via Tenderly (no signing)               |
+| POST   | `/v1/agents/:agent_id/transactions/simulate-bundle` | Simulate a bundle of sequential transactions (approve + swap)  |
 
 ## Billing & Usage
 
@@ -4527,6 +4673,7 @@ Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is a
 | GET    | `/v1/admin/x402`                | Get x402 payment config      |
 | PUT    | `/v1/admin/x402`                | Update x402 payment config   |
 | GET    | `/v1/admin/users`               | List all users (super-admin) |
+| DELETE | `/v1/admin/users/:user_id`      | Delete user (cascade; platform admin only) |
 | GET    | `/v1/admin/chains`              | List chains (admin view)     |
 | POST   | `/v1/admin/chains`              | Create chain                 |
 | PUT    | `/v1/admin/chains/:chain_id`    | Update chain                 |
@@ -4565,6 +4712,35 @@ For detailed release history, see the [1clawAI GitHub](https://github.com/1clawA
 The **/v1** API is stable. Breaking changes would be accompanied by a new version prefix or clear deprecation notices. New optional fields or endpoints are added in a backward-compatible way.
 
 ## 2026-02 (latest)
+
+### Tenderly Transaction Simulation
+
+- **New:** `POST /v1/agents/:agent_id/transactions/simulate` — pre-flight simulation of EVM transactions via Tenderly. Returns balance changes, gas estimates, decoded errors, and a Tenderly dashboard deep-link. No signing or broadcasting occurs.
+- **New:** `POST /v1/agents/:agent_id/transactions/simulate-bundle` — simulate multiple sequential transactions (e.g. approve + swap).
+- **New:** `simulate_first` flag on `POST /v1/agents/:agent_id/transactions` — runs a Tenderly simulation before signing. If the simulation reverts, returns HTTP 422 and does not sign. Org admins can enforce this as mandatory via the `crypto_proxy.require_simulation` setting.
+- **New:** EIP-1559 (Type 2) transaction signing — set `max_fee_per_gas` and `max_priority_fee_per_gas` instead of legacy `gas_price`.
+- **New:** Automatic nonce resolution via `eth_getTransactionCount` RPC when `nonce` is omitted.
+- **New:** Address derivation from private key (secp256k1) — the simulation endpoint resolves the `from` address without exposing the key.
+- **New:** `simulate_transaction` MCP tool and `simulate_first` argument on the `submit_transaction` MCP tool (defaults to `true`).
+- **New:** `simulateTransaction()` and `simulateBundle()` methods in the TypeScript SDK.
+- **New:** Dashboard Transaction Builder on the agent detail page — simulate, review balance changes, then confirm and send.
+- **New:** Transaction history table on the agent detail page with simulation status badges and tx hash copy.
+
+### Admin user management
+
+- **New:** `DELETE /v1/admin/users/:user_id` — platform admins can delete users. Cascades: delete share links created by the user, clear `agents.created_by`, then delete the user (device_auth_codes and user_api_keys CASCADE in DB). Cannot delete self or the last owner of the platform org.
+- **New:** `scripts/cleanup-test-users.sh` — removes test users by display name. Auth via `ONECLAW_TOKEN` or `ADMIN_EMAIL` + `ADMIN_PASSWORD`. Use `--dry-run` to list only.
+
+### Security audit hardening
+
+- **New:** Per-agent transaction guardrails — `tx_allowed_chains`, `tx_to_allowlist`, `tx_max_value_eth`, `tx_daily_limit_eth` enforced before signing.
+- **New:** Audit hash chain — each event stores `prev_event_id` and SHA-256 `integrity_hash` for tamper detection.
+- **New:** x402 payment replay protection — payment proofs deduplicated via SHA-256 before facilitator verification.
+- **New:** Authorization enforcement on `delete_secret`, `list_secrets`, and `list_versions` (policy check, not just org membership).
+- **Improved:** CORS defaults to `https://1claw.xyz` in production (no more permissive `Any` fallback).
+- **Improved:** CSP removes `unsafe-inline` and `unsafe-eval` from `script-src`.
+- **Improved:** Global rate limiting middleware applied to all API routes.
+- **Improved:** Dependency overrides for `minimatch`, `ajv`, `hono` to address known CVEs.
 
 ### Dashboard UX — CopyableId
 
