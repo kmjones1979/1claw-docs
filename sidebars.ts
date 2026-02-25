@@ -91,6 +91,7 @@ const sidebars: SidebarsConfig = {
                 "guides/securing-agent-access",
                 "guides/rotating-secrets",
                 "guides/scoped-permissions",
+                "guides/customer-managed-keys",
                 "guides/sharing-secrets",
                 "guides/crypto-proxy",
                 "guides/revoking-access",
