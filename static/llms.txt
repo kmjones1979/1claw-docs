@@ -96,6 +96,25 @@ Agents can be granted the ability to sign and broadcast on-chain transactions th
 - Default chains: Ethereum (1), Base (8453), Optimism (10), Arbitrum One (42161), Polygon (137), Sepolia (11155111), Base Sepolia (84532).
 - Configuring an RPC URL on a chain enables automatic transaction broadcasting for the crypto proxy.
 
+## TypeScript SDK (@1claw/sdk)
+
+The TypeScript SDK (`npm install @1claw/sdk`) provides a typed client for the 1claw API. It is structured as:
+- `core/` — Client, HTTP transport, error classes
+- `resources/` — 13 resource modules (vault, secrets, access, agents, chains, sharing, approvals, billing, audit, org, auth, apiKeys, x402)
+- `plugins/` — Extensibility interfaces: `CryptoProvider` (client-side encryption), `AuditSink` (forward events to external systems), `PolicyEngine` (local policy pre-evaluation)
+- `generated/` — TypeScript types auto-generated from the OpenAPI spec via `openapi-typescript`
+
+Plugin interfaces let developers create custom provider packages without modifying the SDK. The `OneclawClientConfig` accepts an optional `plugins` field.
+
+## OpenAPI Spec (@1claw/openapi-spec)
+
+The OpenAPI 3.1.0 specification is published as `@1claw/openapi-spec` on npm. Use it to generate API clients in any language:
+- TypeScript: `npx openapi-typescript node_modules/@1claw/openapi-spec/openapi.yaml -o src/types.ts`
+- Python: `openapi-generator generate -i node_modules/@1claw/openapi-spec/openapi.yaml -g python`
+- Go: `openapi-generator generate -i node_modules/@1claw/openapi-spec/openapi.yaml -g go`
+
+GitHub: [1clawAI/1claw-openapi-spec](https://github.com/1clawAI/1claw-openapi-spec)
+
 ## MCP Server
 
 1claw provides a Model Context Protocol (MCP) server that gives AI agents (Claude, Cursor, GPT) just-in-time access to vault secrets.

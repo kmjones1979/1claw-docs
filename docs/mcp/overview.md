@@ -28,7 +28,7 @@ Secrets are fetched at runtime and never persisted in the LLM context window bey
 ```
 
 1. The AI agent calls an MCP tool (e.g. `get_secret`).
-2. The MCP server authenticates with the vault API using an agent token.
+2. The MCP server authenticates with the vault API using an agent JWT (from agent ID + API key, or a static token).
 3. The vault returns the decrypted secret value.
 4. The MCP server passes the value back to the agent.
 5. The agent uses the secret and discards it.

@@ -14,7 +14,13 @@ The fastest way to connect an AI agent to your vault:
 
 1. **Register an agent** in the [1claw dashboard](https://1claw.xyz/agents/new) — save the API key (`ocv_...`).
 2. **Create a policy** granting the agent `read` access to the paths it needs.
-3. **Configure your MCP client** with the hosted server:
+3. **Get a JWT** by calling the agent-token endpoint with your agent ID and API key:
+   ```bash
+   curl -s -X POST https://api.1claw.xyz/v1/auth/agent-token \
+     -H "Content-Type: application/json" \
+     -d '{"agent_id":"<uuid>","api_key":"ocv_..."}' | jq -r '.access_token'
+   ```
+4. **Configure your MCP client** with the hosted server (use the JWT from step 3 as the Bearer token; it expires in ~1 hour):
 
 ```json
 {
@@ -22,7 +28,7 @@ The fastest way to connect an AI agent to your vault:
     "1claw": {
       "url": "https://mcp.1claw.xyz/mcp",
       "headers": {
-        "Authorization": "Bearer ocv_your-agent-token",
+        "Authorization": "Bearer <jwt-from-agent-token-endpoint>",
         "X-Vault-ID": "your-vault-uuid"
       }
     }
@@ -34,7 +40,7 @@ That's it. The agent can now call `list_secrets`, `get_secret`, and other tools.
 
 ## Quick start (local)
 
-For local/air-gapped setups, run the MCP server via stdio:
+For local/air-gapped setups, run the MCP server via stdio. Use **agent ID + API key** so the server can refresh the JWT automatically:
 
 ```bash
 cd packages/mcp && pnpm install && pnpm run build
@@ -47,7 +53,8 @@ cd packages/mcp && pnpm install && pnpm run build
       "command": "node",
       "args": ["/path/to/packages/mcp/dist/index.js"],
       "env": {
-        "ONECLAW_AGENT_TOKEN": "ocv_your-agent-token",
+        "ONECLAW_AGENT_ID": "your-agent-uuid",
+        "ONECLAW_AGENT_API_KEY": "ocv_your_agent_api_key",
         "ONECLAW_VAULT_ID": "your-vault-uuid"
       }
     }
