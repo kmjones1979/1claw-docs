@@ -88,6 +88,7 @@ const sidebars: SidebarsConfig = {
             label: "Guides",
             items: [
                 "guides/give-agent-access",
+                "guides/securing-agent-access",
                 "guides/rotating-secrets",
                 "guides/scoped-permissions",
                 "guides/sharing-secrets",
