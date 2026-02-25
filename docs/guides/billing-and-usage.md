@@ -19,6 +19,21 @@ Every organization starts on the **Free** tier and can upgrade to paid plans for
 | **Business**   | $149          | $1,490       | 100,000     | 100       | 5,000     | 50        |
 | **Enterprise** | Custom        | Custom       | Unlimited   | Unlimited | Unlimited | Unlimited |
 
+### Resource Limits
+
+Each tier enforces hard limits on the number of vaults, secrets, and agents your organization can create. When you attempt to create a resource beyond your limit, the API returns **403 Forbidden** with `type: "resource_limit_exceeded"`:
+
+```json
+{
+  "type": "resource_limit_exceeded",
+  "title": "Resource Limit Exceeded",
+  "status": 403,
+  "detail": "Vault limit reached (3/3 on free tier). Upgrade your plan for more."
+}
+```
+
+Unlike request quotas (which support overages via credits or x402), resource limits require upgrading your subscription tier. The dashboard displays an upgrade prompt automatically when a limit is hit.
+
 ### Upgrading
 
 Visit [1claw.xyz/settings/billing](https://1claw.xyz/settings/billing) to:

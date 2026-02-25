@@ -14,6 +14,7 @@ The Agent API uses the **same** error format and HTTP status codes as the Human 
 |------|---------|------------|
 | 401 | Invalid or expired token | Call `POST /v1/auth/agent-token` again and use the new token |
 | 403 | No permission for this path | Human must add/update a policy granting the agent read (or write) |
+| 403 | Resource limit reached (`type: "resource_limit_exceeded"`) | Organization tier limit hit. Human must upgrade plan at `/settings/billing` |
 | 404 | Vault or secret not found | Check vault_id and path |
 | 410 | Secret expired, deleted, or over max_access_count | Use a different secret or ask human to create a new version |
 

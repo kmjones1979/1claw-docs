@@ -34,9 +34,36 @@ All endpoints are under **/v1**.
 | POST   | `/v1/auth/agent-token`     | Agent ID + API key → JWT                     |
 | POST   | `/v1/auth/api-key-token`   | Personal API key → JWT                       |
 | POST   | `/v1/auth/google`          | Google id_token → JWT                        |
-| POST   | `/v1/auth/refresh`         | Refresh token → new JWT                      |
 | DELETE | `/v1/auth/token`           | Revoke token                                 |
 | POST   | `/v1/auth/change-password` | Change password                              |
+
+## Account Management
+
+| Method | Path           | Description                                  |
+| ------ | -------------- | -------------------------------------------- |
+| GET    | `/v1/auth/me`  | Get current user profile                     |
+| PATCH  | `/v1/auth/me`  | Update profile (display name, marketing opt-in) |
+| DELETE | `/v1/auth/me`  | Delete account and all associated data       |
+
+## MFA (Two-Factor Authentication)
+
+| Method | Path                       | Description                        |
+| ------ | -------------------------- | ---------------------------------- |
+| GET    | `/v1/auth/mfa/status`      | Check MFA enrollment status        |
+| POST   | `/v1/auth/mfa/setup`       | Begin TOTP MFA enrollment          |
+| POST   | `/v1/auth/mfa/verify-setup`| Verify TOTP code to complete setup |
+| POST   | `/v1/auth/mfa/verify`      | Verify MFA code during login (public) |
+| DELETE | `/v1/auth/mfa`             | Disable MFA (requires code or password) |
+
+## Device Authorization (CLI Login)
+
+| Method | Path                                 | Description                      |
+| ------ | ------------------------------------ | -------------------------------- |
+| POST   | `/v1/auth/device/code`               | Request device authorization code |
+| POST   | `/v1/auth/device/token`              | Poll for device authorization token |
+| GET    | `/v1/auth/device/code/:user_code`    | Check device code status (public) |
+| POST   | `/v1/auth/device/approve`            | Approve CLI device login          |
+| POST   | `/v1/auth/device/deny`               | Deny CLI device login             |
 
 ## Personal API Keys
 
@@ -182,7 +209,7 @@ Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is a
 
 - The API expects `email` and `password` for `/v1/auth/token` (not `username`).
 - Secret paths are wildcard routes — e.g. `api-keys/openai`, `config/prod/db`.
-- Middleware layers applied to authenticated routes: **auth → IP filter → usage tracking**.
+- Middleware layers applied to authenticated routes: **auth → IP filter → x402 → rate limit → usage → audit → crypto proxy**.
 - Crypto proxy routes additionally require the `crypto_proxy_enabled` claim in the JWT.
 - The **x402 middleware** runs on all routes and can gate access behind payment for configured endpoints.
 - See [Authentication](/docs/human-api/authentication) for details on obtaining and refreshing JWTs.

@@ -15,6 +15,7 @@ All errors return a JSON body with **RFC 7807** fields: `type`, `title`, `status
 | 400 | Bad Request | Invalid path format, invalid request body, validation failure (e.g. empty permissions). |
 | 401 | Unauthorized | Missing `Authorization` header, invalid Bearer format, invalid or expired JWT, wrong credentials (email/password or API key). |
 | 403 | Forbidden | Valid JWT but no permission for this resource (policy does not grant the action, or not vault owner). |
+| 403 | Resource Limit Exceeded | Tier limit reached for vaults, secrets, or agents. `type` field is `"resource_limit_exceeded"`. Upgrade plan or delete unused resources. |
 | 404 | Not Found | Vault, secret, policy, or agent not found (wrong ID or path). |
 | 409 | Conflict | Request conflicts with current state (e.g. name already exists, if applicable). |
 | 410 | Gone | Secret has expired, been soft-deleted, or exceeded max_access_count. |
@@ -33,3 +34,18 @@ All errors return a JSON body with **RFC 7807** fields: `type`, `title`, `status
 ```
 
 Use `status` for programmatic handling; use `detail` for user-facing messages (it may vary by endpoint).
+
+## Resource limit errors
+
+When creating vaults, secrets, or agents beyond your tier's quota, the API returns `403` with `type: "resource_limit_exceeded"` instead of `"about:blank"`:
+
+```json
+{
+  "type": "resource_limit_exceeded",
+  "title": "Resource Limit Exceeded",
+  "status": 403,
+  "detail": "Vault limit reached (3/3 on free tier). Upgrade your plan for more."
+}
+```
+
+Check the `type` field to distinguish permission errors from quota errors. The `detail` includes the current count, limit, and tier name.
