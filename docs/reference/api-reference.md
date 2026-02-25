@@ -187,6 +187,8 @@ Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is a
 
 ## Admin
 
+Admin endpoints are for platform operators only. They are not documented in detail here; see your internal operations documentation.
+
 | Method | Path                            | Description                  |
 | ------ | ------------------------------- | ---------------------------- |
 | GET    | `/v1/admin/settings`            | List all settings            |
@@ -209,7 +211,7 @@ Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is a
 
 - The API expects `email` and `password` for `/v1/auth/token` (not `username`).
 - Secret paths are wildcard routes — e.g. `api-keys/openai`, `config/prod/db`.
-- Middleware layers applied to authenticated routes: **auth → IP filter → x402 → rate limit → usage → audit → crypto proxy**.
+- **POST /v1/auth/refresh** exists but returns **400** with "Refresh tokens not yet implemented". Use token issuance (e.g. `POST /v1/auth/token` or `POST /v1/auth/agent-token`) instead.
+- Request processing order (rate limit, auth, billing, handler) and how to interpret 401, 402, 403, 429: see [Request pipeline](/docs/reference/request-pipeline).
 - Crypto proxy routes additionally require the `crypto_proxy_enabled` claim in the JWT.
-- The **x402 middleware** runs on all routes and can gate access behind payment for configured endpoints.
-- See [Authentication](/docs/human-api/authentication) for details on obtaining and refreshing JWTs.
+- See [Authentication](/docs/human-api/authentication) for details on obtaining JWTs.

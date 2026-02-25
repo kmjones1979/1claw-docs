@@ -10,6 +10,8 @@ The official TypeScript SDK provides full API parity with the 1Claw REST API. It
 
 **Repository:** [github.com/1clawAI/1claw-sdk](https://github.com/1clawAI/1claw-sdk)
 
+**API contract:** The SDK is built against the **OpenAPI 3.1** spec. Request/response types are generated from it. The spec is published as [@1claw/openapi-spec](https://www.npmjs.com/package/@1claw/openapi-spec) (npm) for codegen or custom clients. See [API reference](/docs/reference/api-reference) for the endpoint list.
+
 ## Install
 
 ```bash
@@ -156,6 +158,19 @@ See the [examples repository](https://github.com/1clawAI/1claw-examples) for run
 
 - **basic/** — Vault CRUD, secrets, billing, signup, email-based sharing
 - **nextjs-agent-secret/** — AI agent with Claude accessing vault secrets via MCP tools
+
+## OpenAPI types
+
+The SDK’s TypeScript types are generated from the [OpenAPI 3.1 spec](https://www.npmjs.com/package/@1claw/openapi-spec). You can import raw generated types:
+
+```ts
+import type { paths, components, operations, ApiSchemas } from "@1claw/sdk";
+
+type Vault = ApiSchemas["VaultResponse"];
+type Agent = ApiSchemas["AgentResponse"];
+```
+
+To regenerate types after spec changes (when working from the monorepo): `npm run generate` in the SDK package.
 
 ## Human API (dashboard / server)
 

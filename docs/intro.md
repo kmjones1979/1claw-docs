@@ -51,19 +51,21 @@ Base URL: `https://api.1claw.xyz` (or your Cloud Run URL). The dashboard at [1cl
 
 ## What you'll find in these docs
 
-- **Concepts** — Vaults, secrets, policies, agents, HSM architecture.
+- **Concepts** — Vaults, secrets, policies, agents, HSM architecture, and [parts of 1claw](/docs/concepts/parts-of-1claw) (API, Dashboard, MCP, CLI, SDK).
 - **Quickstart** — Get a token (human or agent) and read/write a secret.
 - **Human API** — Every endpoint for vaults, secrets, policies, agents, billing, audit.
 - **Agent API** — Auth and fetching secrets; same endpoints with agent JWT.
 - **MCP Server** — Give AI agents (Claude, Cursor, GPT) direct access to secrets via the Model Context Protocol. Hosted at `mcp.1claw.xyz` or run locally.
 - **SDKs** — TypeScript/JavaScript and curl examples.
-- **Guides** — Give an agent access, rotate secrets, revoke access, billing & usage, deploying updates, audit.
+- **Guides** — Give an agent access, rotate secrets, revoke access, billing & usage, troubleshooting, and more.
 - **Security** — HSM, key hierarchy, zero-trust, compliance.
-- **Reference** — Error codes, rate limits, changelog.
+- **Reference** — API reference, request pipeline, error codes, rate limits, [glossary](/docs/reference/glossary), changelog.
 
 ## Next steps
 
 - [What is 1claw?](/docs/concepts/what-is-1claw) — Core concepts in more detail.
+- [Parts of 1claw](/docs/concepts/parts-of-1claw) — API, Dashboard, MCP, CLI, SDK: what each is for and when to use it.
 - [Quickstart for humans](/docs/quickstart/humans) — Log in and store your first secret.
 - [Quickstart for agents](/docs/quickstart/agents) — Get an agent token and fetch a secret.
 - [MCP Server](/docs/mcp/overview) — Connect AI agents to your vault via MCP.
+- [Glossary](/docs/reference/glossary) — Definitions of vault, secret, policy, agent, and other terms.

@@ -21,6 +21,7 @@ Humans need to **create** vaults, **store** and **rotate** secrets, **register**
 
 ## Next
 
+- [Parts of 1claw](/docs/concepts/parts-of-1claw) — API, Dashboard, MCP, CLI, SDK: what each is for and when to use it.
 - [HSM architecture](/docs/concepts/hsm-architecture) — How keys and encryption work.
 - [Secrets model](/docs/concepts/secrets-model) — Paths, types, versioning.
 - [Human vs Agent API](/docs/concepts/human-vs-agent-api) — When to use which and how auth differs.
