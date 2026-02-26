@@ -4,6 +4,9 @@ description: List secret metadata in a vault with GET /v1/vaults/{vault_id}/secr
 sidebar_position: 3
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # List accessible secrets
 
 **Endpoint:** `GET /v1/vaults/:vault_id/secrets`  
@@ -13,10 +16,26 @@ Returns **metadata** for secrets in the vault. The server applies policy so the 
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -s "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets?prefix=api-keys" \
   -H "Authorization: Bearer <agent_token>"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data } = await client.secrets.list(VAULT_ID);
+for (const s of data.secrets) {
+  console.log(`${s.path} (${s.type}, v${s.version})`);
+}
+```
+
+</TabItem>
+</Tabs>
 
 ## Example response (200)
 

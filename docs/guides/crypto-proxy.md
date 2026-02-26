@@ -4,6 +4,9 @@ description: Let agents sign and broadcast blockchain transactions without ever 
 sidebar_position: 3
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Crypto Transaction Proxy
 
 The Crypto Transaction Proxy lets an agent submit on-chain transactions — transfers, swaps, contract calls — while **never having access to the raw private key**. The server signs the transaction using keys stored in the vault and broadcasts it through a dedicated RPC for the target chain.
@@ -35,6 +38,9 @@ Agent                       1claw Vault                  Blockchain
 
 Set `crypto_proxy_enabled: true` when registering or updating an agent:
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/agents" \
   -H "Authorization: Bearer $TOKEN" \
@@ -44,6 +50,26 @@ curl -X POST "https://api.1claw.xyz/v1/agents" \
     "crypto_proxy_enabled": true
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+import { createClient } from "@1claw/sdk";
+
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  apiKey: process.env.ONECLAW_API_KEY,
+});
+
+const { data } = await client.agents.create({
+  name: "DeFi Bot",
+  crypto_proxy_enabled: true,
+});
+```
+
+</TabItem>
+</Tabs>
 
 ### What changes when enabled
 
@@ -58,6 +84,9 @@ The enforcement is two-sided: the flag both **grants** access to the transaction
 
 ## Submitting a transaction
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
   -H "Authorization: Bearer $AGENT_TOKEN" \
@@ -70,6 +99,22 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
     "secret_path": "wallets/hot-wallet"
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: tx } = await client.agents.submitTransaction(agentId, {
+  chain_id: 1,
+  to: "0xRecipientAddress",
+  value: "1000000000000000000",
+  data: "0x",
+  secret_path: "wallets/hot-wallet",
+});
+```
+
+</TabItem>
+</Tabs>
 
 ### Response
 
@@ -84,6 +129,9 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
 
 ## Querying transactions
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 # List all transactions for this agent
 curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
@@ -94,6 +142,20 @@ curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/$TX_ID" \
   -H "Authorization: Bearer $AGENT_TOKEN"
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+// List transactions
+const { data: txList } = await client.agents.listTransactions(agentId);
+
+// Get transaction
+const { data: tx } = await client.agents.getTransaction(agentId, txId);
+```
+
+</TabItem>
+</Tabs>
+
 ## Transaction simulation (Tenderly) {#simulation}
 
 Every transaction can be simulated before signing. Simulation executes the full transaction against the current chain state in a sandboxed environment, returning decoded traces, balance changes, gas estimates, and human-readable error messages — without consuming real gas.
@@ -101,6 +163,9 @@ Every transaction can be simulated before signing. Simulation executes the full 
 ### Standalone simulation
 
 Call the simulate endpoint to preview a transaction without committing:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate" \
@@ -114,6 +179,22 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate" \
     "signing_key_path": "wallets/hot-wallet"
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: sim } = await client.agents.simulateTransaction(agentId, {
+  chain: "base",
+  to: "0xRecipientAddress",
+  value: "0.5",
+  data: "0x",
+  signing_key_path: "wallets/hot-wallet",
+});
+```
+
+</TabItem>
+</Tabs>
 
 The response includes:
 
@@ -134,6 +215,9 @@ The response includes:
 
 Add `"simulate_first": true` to the standard transaction submission. The server simulates first; if the simulation reverts, it returns HTTP 422 and does **not** sign or broadcast:
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
   -H "Authorization: Bearer $AGENT_TOKEN" \
@@ -146,9 +230,27 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
   }'
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: tx } = await client.agents.submitTransaction(agentId, {
+  chain: "base",
+  to: "0xRecipientAddress",
+  value: "0.5",
+  simulate_first: true,
+});
+```
+
+</TabItem>
+</Tabs>
+
 ### Bundle simulation
 
 Simulate multiple transactions sequentially (e.g. ERC-20 approve followed by a swap):
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate-bundle" \
@@ -162,6 +264,21 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate-bu
   }'
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: bundle } = await client.agents.simulateBundle(agentId, {
+  transactions: [
+    { chain: "base", to: "0xToken", value: "0", data: "0xapprove..." },
+    { chain: "base", to: "0xRouter", value: "0", data: "0xswap..." },
+  ],
+});
+```
+
+</TabItem>
+</Tabs>
+
 ### Enforcing simulation
 
 Org admins can require simulation for all agent transactions by setting the `crypto_proxy.require_simulation` org setting to `"true"` via `PUT /v1/admin/settings/crypto_proxy.require_simulation`. When enabled, any transaction submitted without `simulate_first: true` will be automatically simulated, and reverts will block signing.
@@ -169,6 +286,9 @@ Org admins can require simulation for all agent transactions by setting the `cry
 ### EIP-1559 (Type 2) transactions
 
 Set `max_fee_per_gas` and `max_priority_fee_per_gas` instead of `gas_price` to use EIP-1559 fee mode:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
@@ -183,6 +303,23 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
     "simulate_first": true
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: tx } = await client.agents.submitTransaction(agentId, {
+  chain: "base",
+  to: "0xRecipientAddress",
+  value: "0.1",
+  max_fee_per_gas: "30000000000",
+  max_priority_fee_per_gas: "1500000000",
+  simulate_first: true,
+});
+```
+
+</TabItem>
+</Tabs>
 
 ## MCP tools
 
@@ -263,6 +400,9 @@ You can always fetch the live list with `GET /v1/chains`. The response includes 
 
 Admins can add new chains via the admin API:
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/admin/chains" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -276,6 +416,31 @@ curl -X POST "https://api.1claw.xyz/v1/admin/chains" \
     "native_currency": "MCH"
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+// Admin chain management requires direct API calls
+const response = await fetch("https://api.1claw.xyz/v1/admin/chains", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${adminToken}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    name: "my-chain",
+    display_name: "My Chain",
+    chain_id: 12345,
+    rpc_url: "https://rpc.mychain.io",
+    explorer_url: "https://explorer.mychain.io",
+    native_currency: "MCH",
+  }),
+});
+```
+
+</TabItem>
+</Tabs>
 
 See the [Admin API reference](/docs/reference/api-reference#admin) for update and delete endpoints.
 
@@ -292,6 +457,9 @@ Per-agent controls can be set when registering or updating an agent to limit wha
 | `tx_max_value_eth` | `string` | Maximum value per transaction in ETH (e.g. `"1.0"`). Null = no per-tx limit. |
 | `tx_daily_limit_eth` | `string` | Rolling 24-hour spend limit in ETH. Null = no daily limit. |
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X PATCH "https://api.1claw.xyz/v1/agents/$AGENT_ID" \
   -H "Authorization: Bearer $TOKEN" \
@@ -303,6 +471,21 @@ curl -X PATCH "https://api.1claw.xyz/v1/agents/$AGENT_ID" \
     "tx_daily_limit_eth": "5.0"
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: agent } = await client.agents.update(agentId, {
+  tx_allowed_chains: ["ethereum", "base"],
+  tx_to_allowlist: ["0xSafeAddress1", "0xSafeAddress2"],
+  tx_max_value_eth: "0.5",
+  tx_daily_limit_eth: "5.0",
+});
+```
+
+</TabItem>
+</Tabs>
 
 When a transaction violates any guardrail, the proxy returns **403 Forbidden** with a descriptive `detail` message.
 

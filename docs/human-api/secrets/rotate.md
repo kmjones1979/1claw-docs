@@ -4,6 +4,9 @@ description: The rotate endpoint may return 400 not yet implemented; for now cre
 sidebar_position: 4
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Rotate a secret
 
 **Endpoint:** `POST /v1/vaults/:vault_id/secrets/:path/rotate`  
@@ -19,12 +22,27 @@ Once rotation is implemented, this endpoint may accept an optional body (e.g. `n
 
 ## Example (when implemented)
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/openai/rotate" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"new_value":"sk-proj-..."}'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.secrets.set(vaultId, "api-keys/openai", "sk-proj-NEW...", {
+  type: "api_key",
+}); // Creates a new version
+```
+
+</TabItem>
+</Tabs>
 
 ## Current behavior
 

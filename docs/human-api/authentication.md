@@ -4,6 +4,9 @@ description: Get a JWT for the Human API using email/password, Google id_token, 
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Authentication
 
 The Human API expects a **JWT** in the `Authorization` header:
@@ -28,11 +31,27 @@ You can obtain an access token in three ways: email/password, Google OAuth, or a
 
 **Example:**
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST https://api.1claw.xyz/v1/auth/token \
   -H "Content-Type: application/json" \
   -d '{"email":"you@example.com","password":"your-password"}'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.auth.login({
+  email: "you@example.com",
+  password: "your-password",
+});
+```
+
+</TabItem>
+</Tabs>
 
 **Response (200):**
 
@@ -59,11 +78,26 @@ curl -X POST https://api.1claw.xyz/v1/auth/token \
 
 **Example:**
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST https://api.1claw.xyz/v1/auth/google \
   -H "Content-Type: application/json" \
   -d '{"id_token":"<google-id-token>"}'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.auth.google({
+  id_token: "<google-id-token>",
+});
+```
+
+</TabItem>
+</Tabs>
 
 **Response (200):** Same as email/password (`access_token`, `token_type`, `expires_in`).
 
@@ -82,11 +116,27 @@ If you have a **personal API key** (e.g. `1ck_...` from the dashboard or `POST /
 
 **Example:**
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST https://api.1claw.xyz/v1/auth/api-key-token \
   -H "Content-Type: application/json" \
   -d '{"api_key":"1ck_..."}'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  apiKey: "1ck_...",
+});
+```
+
+</TabItem>
+</Tabs>
 
 **Response (200):** Same shape as above.
 
@@ -96,6 +146,24 @@ curl -X POST https://api.1claw.xyz/v1/auth/api-key-token \
 
 **Endpoint:** `DELETE /v1/auth/token`  
 **Headers:** `Authorization: Bearer <token>`
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X DELETE https://api.1claw.xyz/v1/auth/token \
+  -H "Authorization: Bearer <token>"
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.auth.logout();
+```
+
+</TabItem>
+</Tabs>
 
 Returns **204 No Content** on success. Useful to invalidate the current token (e.g. on logout).
 
@@ -111,6 +179,29 @@ Returns **204 No Content** on success. Useful to invalidate the current token (e
 |------------------|--------|----------|---------------|
 | current_password | string | ✅       | Current pwd   |
 | new_password     | string | ✅       | New password  |
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST https://api.1claw.xyz/v1/auth/change-password \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"current_password":"...","new_password":"..."}'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.auth.changePassword({
+  current_password: "...",
+  new_password: "...",
+});
+```
+
+</TabItem>
+</Tabs>
 
 **Response (200):** `{ "message": "Password changed successfully" }`
 

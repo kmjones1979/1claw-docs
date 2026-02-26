@@ -4,16 +4,36 @@ description: Retrieve a secret value by vault ID and path with GET /v1/vaults/{v
 sidebar_position: 2
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Fetch a secret
 
 Same endpoint as for humans: **GET /v1/vaults/:vault_id/secrets/:path**. The agent sends its JWT; the server checks policies for that agent and returns the decrypted value only if allowed.
 
 ## Request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -s "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/secrets/api-keys/openai" \
   -H "Authorization: Bearer <agent_access_token>"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: secret } = await client.secrets.get(
+  "ae370174-9aee-4b02-ba7c-d1519930c709",
+  "api-keys/openai",
+);
+// Use secret.value for the intended call — don't log or persist
+```
+
+</TabItem>
+</Tabs>
 
 ## Response (200)
 

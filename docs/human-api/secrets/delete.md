@@ -4,6 +4,9 @@ description: Soft-delete a secret at a path using DELETE /v1/vaults/{vault_id}/s
 sidebar_position: 3
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Delete a secret
 
 Soft-delete a secret at a path. All versions of that path are marked deleted; they are not returned in list or get, and GET returns **410 Gone**.
@@ -13,10 +16,23 @@ Soft-delete a secret at a path. All versions of that path are marked deleted; th
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X DELETE "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/secrets/api-keys/old-key" \
   -H "Authorization: Bearer <token>"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.secrets.delete(vaultId, "api-keys/old-key");
+```
+
+</TabItem>
+</Tabs>
 
 ## Response
 

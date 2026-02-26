@@ -4,6 +4,9 @@ description: Share secrets with teammates or external collaborators by email, ev
 sidebar_position: 4
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Sharing Secrets
 
 1Claw supports sharing individual secrets with other users, agents, or external collaborators via email. Shares are time-limited, access-counted, and can be revoked at any time.
@@ -20,6 +23,9 @@ sidebar_position: 4
 
 ## Create a share
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
   -H "Authorization: Bearer $TOKEN" \
@@ -31,6 +37,28 @@ curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
     "max_access_count": 5
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+import { createClient } from "@1claw/sdk";
+
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  apiKey: process.env.ONECLAW_API_KEY,
+});
+
+const { data: share } = await client.sharing.create(secretId, {
+  recipient_type: "external_email",
+  email: "colleague@example.com",
+  expires_at: "2026-03-15T00:00:00Z",
+  max_access_count: 5,
+});
+```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 
@@ -49,6 +77,9 @@ curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
 
 The simplest way for an agent to share a secret back with the human who owns it:
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
   -H "Authorization: Bearer $AGENT_TOKEN" \
@@ -59,6 +90,20 @@ curl -X POST https://api.1claw.xyz/v1/secrets/{secret_id}/share \
     "max_access_count": 5
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: share } = await client.sharing.create(secretId, {
+  recipient_type: "creator",
+  expires_at: "2026-03-15T00:00:00Z",
+  max_access_count: 5,
+});
+```
+
+</TabItem>
+</Tabs>
 
 The backend resolves the agent's `created_by` field to identify the human. No user UUID or email needed. The human sees the share in their **Inbound** shares and accepts it.
 
@@ -81,9 +126,22 @@ Note: only humans can create email-based shares — agents are blocked from this
 
 ## Access a share
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl https://api.1claw.xyz/v1/share/{share_id}
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: secret } = await client.sharing.access(shareId);
+```
+
+</TabItem>
+</Tabs>
 
 Returns the decrypted secret value if the share is still valid (not expired, under access limit).
 
@@ -91,35 +149,23 @@ Returns the decrypted secret value if the share is still valid (not expired, und
 
 Only the creator can revoke:
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X DELETE https://api.1claw.xyz/v1/share/{share_id} \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-## Using the SDK
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
 
-```ts
-import { createClient } from "@1claw/sdk";
-
-const client = createClient({
-    baseUrl: "https://api.1claw.xyz",
-    apiKey: "...",
-});
-
-// Share by email
-const share = await client.sharing.create(secretId, {
-    recipient_type: "external_email",
-    email: "colleague@example.com",
-    expires_at: "2026-03-15T00:00:00Z",
-    max_access_count: 5,
-});
-
-// Access a share
-const secret = await client.sharing.access(shareId);
-
-// Revoke
+```typescript
 await client.sharing.revoke(shareId);
 ```
+
+</TabItem>
+</Tabs>
 
 ## Email notifications
 

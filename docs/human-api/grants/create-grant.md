@@ -4,6 +4,9 @@ description: Grant a principal read/write/delete access to secret paths in a vau
 sidebar_position: 0
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Create a policy (grant)
 
 Policies link a **principal** (user or agent) to **secret path patterns** with a set of **permissions** (e.g. read, write, delete). Path matching uses globs: `*` for one segment, `**` for any depth.
@@ -26,6 +29,9 @@ In the **dashboard** at [1claw.xyz](https://1claw.xyz), use **Vaults → [vault]
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/policies" \
   -H "Authorization: Bearer <token>" \
@@ -37,6 +43,21 @@ curl -X POST "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c7
     "permissions": ["read"]
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.access.grantAgent({
+  vault_id: vaultId,
+  secret_path_pattern: "**",
+  principal_id: agentId,
+  permissions: ["read"],
+});
+```
+
+</TabItem>
+</Tabs>
 
 ## Example response (201)
 

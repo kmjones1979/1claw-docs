@@ -4,6 +4,9 @@ description: List all policies for a vault with GET /v1/vaults/{vault_id}/polici
 sidebar_position: 2
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # List policies (grants)
 
 **Endpoint:** `GET /v1/vaults/:vault_id/policies`  
@@ -13,10 +16,26 @@ Returns all policies (grants) for the given vault.
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -s "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/policies" \
   -H "Authorization: Bearer <token>"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data } = await client.access.listGrants(vaultId);
+for (const p of data.policies) {
+  console.log(p.id, p.principal_type, p.permissions);
+}
+```
+
+</TabItem>
+</Tabs>
 
 ## Example response (200)
 

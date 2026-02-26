@@ -4,6 +4,9 @@ description: Store a new secret or new version at a path in a vault using PUT /v
 sidebar_position: 0
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Create or update a secret
 
 Store a secret in a vault at a given **path**. If the path already exists, this creates a **new version**. Path is slash-separated (e.g. `passwords/one`, `api-keys/stripe`). Paths must be alphanumeric with hyphens, underscores, and slashes; no leading or trailing slashes.
@@ -29,6 +32,9 @@ Store a secret in a vault at a given **path**. If the path already exists, this 
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X PUT "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/secrets/api-keys/openai" \
   -H "Authorization: Bearer <token>" \
@@ -40,6 +46,23 @@ curl -X PUT "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c70
     "expires_at": "2026-12-31T23:59:59Z"
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.secrets.set(vaultId, "api-keys/openai", "sk-proj-...", {
+  type: "api_key",
+  metadata: {
+    tags: ["openai", "production"],
+    description: "OpenAI production key",
+  },
+  expires_at: "2026-12-31T23:59:59Z",
+});
+```
+
+</TabItem>
+</Tabs>
 
 ## Example response (201 Created)
 

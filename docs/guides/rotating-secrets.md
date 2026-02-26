@@ -4,6 +4,9 @@ description: Create a new version with PUT to the same path; optionally use expi
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Rotating secrets
 
 1claw does not yet expose a dedicated "rotate" endpoint that returns a new value from a provider. Rotation is done by **creating a new version** of the secret.
@@ -15,6 +18,32 @@ sidebar_position: 1
 3. Update any consumers to use the new value (or rely on "latest" version).
 4. Optionally revoke or expire the old value at the external provider.
 
+## How to rotate
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+# Generate the new value, then store it at the same path
+curl -X PUT "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"api_key","value":"sk-proj-NEW..."}'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+// PUT to the same path creates a new version automatically
+await client.secrets.set(vaultId, "api-keys/openai", "sk-proj-NEW...", {
+  type: "api_key",
+});
+```
+
+</TabItem>
+</Tabs>
+
 ## Optional: limit exposure
 
 - Set **expires_at** on the secret so it becomes unavailable after a date.
@@ -22,4 +51,23 @@ sidebar_position: 1
 
 ## Agent tokens
 
-To rotate an **agent API key**, use **POST /v1/agents/:agent_id/rotate-key**. The response includes the new key once; update the agent’s config and discard the old key.
+To rotate an **agent API key**, use **POST /v1/agents/:agent_id/rotate-key**. The response includes the new key once; update the agent's config and discard the old key.
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/rotate-key" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data } = await client.agents.rotateKey(agentId);
+console.log(data.api_key); // New key — store securely
+```
+
+</TabItem>
+</Tabs>

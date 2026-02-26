@@ -4,6 +4,9 @@ description: Step-by-step instructions for installing and configuring the 1claw 
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Setup Guide
 
 ## Prerequisites
@@ -19,11 +22,37 @@ Before configuring the MCP server, you need:
 
 The simplest setup — no local installation needed. The hosted MCP server runs at `mcp.1claw.xyz` and authenticates per-connection with a **Bearer JWT**. You get the JWT by calling the 1claw API with your **agent ID** and **API key** (`ocv_...`):
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -s -X POST https://api.1claw.xyz/v1/auth/agent-token \
   -H "Content-Type: application/json" \
   -d '{"agent_id":"<your-agent-uuid>","api_key":"ocv_..."}' | jq -r '.access_token'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+import { createClient } from "@1claw/sdk";
+
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  agentId: "<your-agent-uuid>",
+  apiKey: "ocv_...",
+});
+// The SDK manages token exchange and refresh automatically.
+// For manual token retrieval:
+const { data } = await client.auth.agentToken({
+  agent_id: "<your-agent-uuid>",
+  api_key: "ocv_...",
+});
+console.log(data.access_token);
+```
+
+</TabItem>
+</Tabs>
 
 Use the returned `access_token` as the Bearer value below. The token expires in about an hour; for long-lived use, your client may need to refresh it by calling the agent-token endpoint again.
 

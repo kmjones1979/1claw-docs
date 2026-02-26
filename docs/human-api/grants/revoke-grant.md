@@ -4,6 +4,9 @@ description: Delete a policy with DELETE /v1/vaults/{vault_id}/policies/{policy_
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Revoke a policy (grant)
 
 **Endpoint:** `DELETE /v1/vaults/:vault_id/policies/:policy_id`  
@@ -13,10 +16,23 @@ Removes the policy. The principal (user or agent) immediately loses the permissi
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X DELETE "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies/897b37da-a265-4bd4-818b-e716eeff3de3" \
   -H "Authorization: Bearer <token>"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.access.revoke(vaultId, policyId);
+```
+
+</TabItem>
+</Tabs>
 
 ## Response
 

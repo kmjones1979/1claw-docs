@@ -4,6 +4,9 @@ description: Retrieve the decrypted value and metadata of a secret by vault ID a
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Read a secret
 
 Retrieve the **decrypted value** and metadata of a secret. Requires read permission (policy or vault owner).
@@ -18,10 +21,24 @@ Retrieve the **decrypted value** and metadata of a secret. Requires read permiss
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -s "https://api.1claw.xyz/v1/vaults/ae370174-9aee-4b02-ba7c-d1519930c709/secrets/api-keys/openai" \
   -H "Authorization: Bearer <token>"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: secret } = await client.secrets.get(vaultId, "api-keys/openai");
+console.log(secret.value);
+```
+
+</TabItem>
+</Tabs>
 
 ## Example response (200)
 

@@ -4,6 +4,9 @@ description: "End-to-end walkthrough: create a vault and secret, register an age
 sidebar_position: 0
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Give an agent access
 
 This is the **golden path**: you create a secret, register an agent, grant it read access via a policy, then the agent fetches the secret at runtime.
@@ -11,6 +14,9 @@ This is the **golden path**: you create a secret, register an agent, grant it re
 ## 1. Create a vault and secret (human)
 
 Log in (email/password or Google), then:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 # Get token (see Quickstart for humans)
@@ -30,7 +36,34 @@ curl -s -X PUT "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/opena
   -d '{"type":"api_key","value":"sk-proj-..."}'
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+import { createClient } from "@1claw/sdk";
+
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  apiKey: process.env.ONECLAW_API_KEY,
+});
+
+const { data: vault } = await client.vault.create({
+  name: "Production",
+  description: "Prod secrets",
+});
+
+await client.secrets.set(vault.id, "api-keys/openai", "sk-proj-...", {
+  type: "api_key",
+});
+```
+
+</TabItem>
+</Tabs>
+
 ## 2. Register an agent (human)
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 AGENT_RESP=$(curl -s -X POST https://api.1claw.xyz/v1/agents \
@@ -42,9 +75,28 @@ API_KEY=$(echo "$AGENT_RESP" | jq -r '.api_key')
 # Store API_KEY securely; it is shown only once.
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data } = await client.agents.create({
+  name: "My Bot",
+  description: "CI agent",
+  scopes: ["vaults:read"],
+});
+const agentId = data.agent.id;
+const apiKey = data.api_key; // Store securely — shown only once
+```
+
+</TabItem>
+</Tabs>
+
 ## 3. Create a policy (human)
 
 Grant the agent read access to all secrets in the vault (or use a narrower pattern like `api-keys/*`):
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 curl -s -X POST "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies" \
@@ -58,9 +110,27 @@ curl -s -X POST "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies" \
   }"
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await client.access.grantAgent({
+  vault_id: vault.id,
+  secret_path_pattern: "**",
+  principal_id: agentId,
+  permissions: ["read"],
+});
+```
+
+</TabItem>
+</Tabs>
+
 ## 4. Agent fetches the secret
 
-From the agent’s environment (with `AGENT_ID` and `API_KEY` stored securely):
+From the agent's environment (with `AGENT_ID` and `API_KEY` stored securely):
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 # Get agent JWT
@@ -72,6 +142,26 @@ AGENT_TOKEN=$(curl -s -X POST https://api.1claw.xyz/v1/auth/agent-token \
 curl -s "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
   -H "Authorization: Bearer $AGENT_TOKEN"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+import { createClient } from "@1claw/sdk";
+
+// In the agent's runtime
+const agentClient = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  agentId: process.env.ONECLAW_AGENT_ID,
+  apiKey: process.env.ONECLAW_AGENT_API_KEY,
+});
+
+const { data: secret } = await agentClient.secrets.get(VAULT_ID, "api-keys/openai");
+// Use secret.value — don't log or persist
+```
+
+</TabItem>
+</Tabs>
 
 The response includes the decrypted `value`. The agent uses it for the intended call and does not persist or log it.
 

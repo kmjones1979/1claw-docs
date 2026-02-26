@@ -4,19 +4,38 @@ description: List all agents in your org with GET /v1/agents.
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # List agents
 
 **Endpoint:** `GET /v1/agents`  
 **Authentication:** Bearer JWT
 
-Returns all agents in the caller’s organization. API keys are never returned; only metadata.
+Returns all agents in the caller's organization. API keys are never returned; only metadata.
 
 ## Example request
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 curl -s "https://api.1claw.xyz/v1/agents" \
   -H "Authorization: Bearer <token>"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data } = await client.agents.list();
+for (const a of data.agents) {
+  console.log(a.name, a.id, a.is_active);
+}
+```
+
+</TabItem>
+</Tabs>
 
 ## Example response (200)
 

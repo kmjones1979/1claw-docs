@@ -4,6 +4,9 @@ description: Log in with email and password, create a vault, store a secret, and
 sidebar_position: 0
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Quickstart for humans
 
 This page gets you from zero to a stored secret in a few minutes: obtain a JWT, create a vault, then create and read a secret.
@@ -12,11 +15,32 @@ This page gets you from zero to a stored secret in a few minutes: obtain a JWT, 
 
 Exchange email and password for an access token. Base URL: `https://api.1claw.xyz` (or your Cloud Run URL).
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST https://api.1claw.xyz/v1/auth/token \
   -H "Content-Type: application/json" \
   -d '{"email":"you@example.com","password":"your-password"}'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+import { createClient } from "@1claw/sdk";
+
+const client = createClient({ baseUrl: "https://api.1claw.xyz" });
+
+await client.auth.login({
+  email: "you@example.com",
+  password: "your-password",
+});
+// Client is now authenticated — JWT is managed internally
+```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 
@@ -34,6 +58,9 @@ Use `access_token` as a Bearer token in all following requests.
 
 Vaults are containers for secrets. Each vault has its own HSM-backed key.
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 export TOKEN="<your access_token>"
 
@@ -42,6 +69,20 @@ curl -X POST https://api.1claw.xyz/v1/vaults \
   -H "Content-Type: application/json" \
   -d '{"name":"My Vault","description":"Secrets for my app"}'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: vault } = await client.vault.create({
+  name: "My Vault",
+  description: "Secrets for my app",
+});
+console.log(vault.id); // ae370174-9aee-4b02-ba7c-d1519930c709
+```
+
+</TabItem>
+</Tabs>
 
 **Response (201):**
 
@@ -61,6 +102,9 @@ Save the `id`; you'll use it as `vault_id`.
 
 Secrets live at **paths** inside a vault. Paths are slash-separated (e.g. `api-keys/stripe`, `passwords/db`).
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 export VAULT_ID="ae370174-9aee-4b02-ba7c-d1519930c709"
 
@@ -73,6 +117,25 @@ curl -X PUT "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/openai" 
     "metadata": {"tags": ["openai", "production"]}
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: secret } = await client.secrets.set(
+  vault.id,
+  "api-keys/openai",
+  "sk-proj-...",
+  {
+    type: "api_key",
+    metadata: { tags: ["openai", "production"] },
+  },
+);
+console.log(secret.path, `v${secret.version}`); // api-keys/openai v1
+```
+
+</TabItem>
+</Tabs>
 
 **Response (201):**
 
@@ -91,19 +154,49 @@ The secret **value** is never returned after creation; only metadata.
 
 ## 4. Read the secret
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -s "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: secret } = await client.secrets.get(vault.id, "api-keys/openai");
+console.log(secret.value); // sk-proj-... (use securely, don't log in production)
+```
+
+</TabItem>
+</Tabs>
+
 **Response (200):** Includes decrypted `value` plus metadata. Keep this response secure.
 
 ## 5. List secrets (metadata only)
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
 
 ```bash
 curl -s "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets" \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data } = await client.secrets.list(vault.id);
+for (const s of data.secrets) {
+  console.log(`${s.path} (${s.type}, v${s.version})`);
+}
+```
+
+</TabItem>
+</Tabs>
 
 Returns `{ "secrets": [ ... ] }` with id, path, type, version, metadata, created_at, expires_at — **no** value.
 

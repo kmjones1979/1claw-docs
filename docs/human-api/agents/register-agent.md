@@ -4,6 +4,9 @@ description: Create an agent identity and receive an API key using POST /v1/agen
 sidebar_position: 0
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Register an agent
 
 **Endpoint:** `POST /v1/agents`  
@@ -24,6 +27,9 @@ Creates a new agent identity and returns an **API key** (`ocv_...`). The key is 
 
 ## Example request
 
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -X POST "https://api.1claw.xyz/v1/agents" \
   -H "Authorization: Bearer <token>" \
@@ -35,6 +41,22 @@ curl -X POST "https://api.1claw.xyz/v1/agents" \
     "scopes": ["vaults:read"]
   }'
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data } = await client.agents.create({
+  name: "DeFi Bot",
+  description: "Automated trading agent",
+  crypto_proxy_enabled: true,
+  scopes: ["vaults:read"],
+});
+console.log(data.agent.id, data.api_key); // Store api_key securely
+```
+
+</TabItem>
+</Tabs>
 
 ## Example response (201)
 
