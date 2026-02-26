@@ -14,6 +14,13 @@ import TabItem from '@theme/TabItem';
 
 Creates a new agent identity and returns an **API key** (`ocv_...`). The key is returned only on create (and on rotate); store it securely for the agent to use with `POST /v1/auth/agent-token`.
 
+In addition to the API key, each agent automatically receives:
+
+- **Ed25519 signing keypair** — public key on the agent record (`ssh_public_key`), private key in the org's `__agent-keys` vault.
+- **P-256 ECDH keypair** — public key on the agent record (`ecdh_public_key`), private key in `__agent-keys`.
+
+See [Agent keys](/docs/security/agent-keys) for details on key formats and how to access private keys.
+
 ## Request body
 
 | Field                | Type    | Required | Description                                                                                                                                                                                                                                                     |
@@ -70,6 +77,8 @@ console.log(data.agent.id, data.api_key); // Store api_key securely
         "scopes": ["vaults:read"],
         "is_active": true,
         "crypto_proxy_enabled": true,
+        "ssh_public_key": "m+Z6jV5W86WMTV27cpk9QGXIo+fP1OX88dHxdj6DHUI=",
+        "ecdh_public_key": "BDq8k3Lw...base64...65bytes...",
         "created_at": "2026-02-18T12:00:00Z"
     },
     "api_key": "ocv_W3_eYj0BSdTjChKwCKRYuZJacmmhVn4ozWIxHV-zlEs"

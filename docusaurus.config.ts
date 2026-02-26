@@ -132,6 +132,18 @@ const config: Config = {
             lastmod: "date",
         },
     } satisfies Preset.ThemeConfig,
+    themes: [
+        [
+            "@easyops-cn/docusaurus-search-local",
+            {
+                hashed: true,
+                indexBlog: false,
+                docsRouteBasePath: "/docs",
+                highlightSearchTermsOnTargetPage: true,
+                searchResultContextMaxLength: 80,
+            },
+        ],
+    ],
     plugins: [
         function excludeNodeModulesMdx() {
             return {

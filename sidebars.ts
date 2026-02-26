@@ -111,6 +111,7 @@ const sidebars: SidebarsConfig = {
             items: [
                 "security/hsm-overview",
                 "security/key-hierarchy",
+                "security/agent-keys",
                 "security/zero-trust",
                 "security/two-factor-auth",
                 "security/compliance",
