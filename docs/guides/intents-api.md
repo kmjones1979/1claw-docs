@@ -1,5 +1,5 @@
 ---
-title: Crypto Transaction Proxy
+title: Intents API
 description: Let agents sign and broadcast blockchain transactions without ever seeing private keys. Includes the full list of supported chains.
 sidebar_position: 3
 ---
@@ -7,9 +7,9 @@ sidebar_position: 3
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Crypto Transaction Proxy
+# Intents API
 
-The Crypto Transaction Proxy lets an agent submit on-chain transactions — transfers, swaps, contract calls — while **never having access to the raw private key**. The server signs the transaction using keys stored in the vault and broadcasts it through a dedicated RPC for the target chain.
+The Intents API lets an agent submit on-chain transactions — transfers, swaps, contract calls — while **never having access to the raw private key**. The server signs the transaction using keys stored in the vault and broadcasts it through a dedicated RPC for the target chain.
 
 ## How it works
 
@@ -34,9 +34,9 @@ Agent                       1claw Vault                  Blockchain
 2. The vault decrypts the private key inside the HSM boundary, constructs and signs the transaction, and broadcasts it to the chain's RPC endpoint.
 3. The agent receives an `id` and `tx_hash` — it never sees the raw key material.
 
-## Enabling the proxy
+## Enabling the Intents API
 
-Set `crypto_proxy_enabled: true` when registering or updating an agent:
+Set `intents_api_enabled: true` when registering or updating an agent:
 
 <Tabs groupId="code-examples">
 <TabItem value="curl" label="curl">
@@ -47,7 +47,7 @@ curl -X POST "https://api.1claw.xyz/v1/agents" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "DeFi Bot",
-    "crypto_proxy_enabled": true
+    "intents_api_enabled": true
   }'
 ```
 
@@ -64,7 +64,7 @@ const client = createClient({
 
 const { data } = await client.agents.create({
   name: "DeFi Bot",
-  crypto_proxy_enabled: true,
+  intents_api_enabled: true,
 });
 ```
 
@@ -73,7 +73,7 @@ const { data } = await client.agents.create({
 
 ### What changes when enabled
 
-| Behaviour                        | `crypto_proxy_enabled: false` | `crypto_proxy_enabled: true` |
+| Behaviour                        | `intents_api_enabled: false` | `intents_api_enabled: true` |
 | -------------------------------- | ----------------------------- | ---------------------------- |
 | Read `api_key`, `password`, etc. | Allowed                       | Allowed                      |
 | Read `private_key` or `ssh_key`  | Allowed                       | **Blocked (403)**            |
@@ -281,7 +281,7 @@ const { data: bundle } = await client.agents.simulateBundle(agentId, {
 
 ### Enforcing simulation
 
-Org admins can require simulation for all agent transactions by setting the `crypto_proxy.require_simulation` org setting to `"true"` via `PUT /v1/admin/settings/crypto_proxy.require_simulation`. When enabled, any transaction submitted without `simulate_first: true` will be automatically simulated, and reverts will block signing.
+Org admins can require simulation for all agent transactions by setting the `intents_api.require_simulation` org setting to `"true"` via `PUT /v1/admin/settings/intents_api.require_simulation`. When enabled, any transaction submitted without `simulate_first: true` will be automatically simulated, and reverts will block signing.
 
 ### EIP-1559 (Type 2) transactions
 

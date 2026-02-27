@@ -93,7 +93,7 @@ const sidebars: SidebarsConfig = {
                 "guides/scoped-permissions",
                 "guides/customer-managed-keys",
                 "guides/sharing-secrets",
-                "guides/crypto-proxy",
+                "guides/intents-api",
                 "guides/revoking-access",
                 "guides/openclaw",
                 "guides/mcp-integration",

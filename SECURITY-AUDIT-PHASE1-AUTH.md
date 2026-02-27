@@ -51,7 +51,7 @@
 ### Agent-token flow
 - **Endpoint:** `POST /v1/auth/agent-token` with `{ agent_id, api_key }` (auth.rs `create_agent_token`).
 - **Validation:** Agent loaded by ID; `is_active` and `expires_at` checked. For `auth_method == "api_key"`, `api_key_hash` is verified with Argon2 (PasswordHash::new + Argon2::default().verify_password). Key is **ocv_**-prefixed; stored value is Argon2 hash only (agent_repo stores `api_key_hash`).
-- **JWT claims:** Built in auth.rs:163–168: `sub: "agent:{id}"`, `org`, `scopes`, `vault_ids`, `exp`, `iat`, `jti`, `crypto_proxy_enabled`. Signed with EdDSA (HSM), header `{"alg":"EdDSA","typ":"JWT"}`.
+- **JWT claims:** Built in auth.rs:163–168: `sub: "agent:{id}"`, `org`, `scopes`, `vault_ids`, `exp`, `iat`, `jti`, `intents_api_enabled`. Signed with EdDSA (HSM), header `{"alg":"EdDSA","typ":"JWT"}`.
 - **Algorithm:** EdDSA (GCP KMS or SoftHSM), not HMAC; verification in auth middleware via `JwtValidator` (DecodingKey::from_ed_der, Validation::new(Algorithm::EdDSA)).
 - **Lifetime:** `token_ttl_seconds` per agent or default `jwt_agent_token_expiry_secs` (e.g. 3600).
 

@@ -1,174 +1,105 @@
-# 1claw
+# 1Claw — AI Agent Secrets Management
 
-> 1claw is a cloud-hosted Hardware Security Module (HSM) secrets manager that lets humans grant AI agents scoped, audited, revocable access to secrets — without ever exposing raw credentials to the agent.
+> HSM-backed secret management for AI agents and humans. Zero-knowledge vault with envelope encryption, agent-native access control, customer-managed encryption keys (CMEK), Intents API for transaction signing, and x402 micropayments.
 
-## What 1claw does
+## Links
 
-1claw stores API keys, tokens, and other secrets inside a cloud HSM. Humans control which agents can access which secrets, with what permissions, and for how long. Agents authenticate with 1claw and receive secrets at runtime — they never hold secrets in their own environment or context window.
+- Website: https://1claw.xyz
+- API: https://api.1claw.xyz
+- Docs: https://docs.1claw.xyz
+- MCP Server: https://mcp.1claw.xyz
+- Dashboard: https://1claw.xyz (login required)
+- GitHub: https://github.com/1clawAI/1claw
+- npm SDK: https://www.npmjs.com/package/@1claw/sdk
+- npm CLI: https://www.npmjs.com/package/@1claw/cli
+- npm MCP: https://www.npmjs.com/package/@1claw/mcp
+- npm OpenAPI Spec: https://www.npmjs.com/package/@1claw/openapi-spec
+- Contact: ops@1claw.xyz
 
-## Access Control Model
+## What 1Claw Does
 
-1claw uses policy-based access control. Agents do NOT get blanket access to all secrets in a vault — they only get access to specific secret paths that a human explicitly grants.
+1Claw stores and manages secrets (API keys, tokens, certificates, private keys, environment variables) in HSM-backed encrypted vaults. AI agents are first-class principals — they authenticate with scoped API keys, receive short-lived JWTs, and access only the secret paths explicitly granted by a human via policies.
 
-### How humans grant agent access
+## Architecture
 
-1. **Register an agent** in the dashboard (name, auth method, scopes)
-2. **Create a vault** and store secrets
-3. **Create an access policy** that links the agent to specific secret paths:
-   - `principal_type: "agent"`, `principal_id: <agent_uuid>`
-   - `secret_path_pattern: "api-keys/*"` (glob pattern — `*` matches one segment, `**` matches any depth)
-   - `permissions: ["read"]` (read, write, delete)
-   - Optional conditions: IP allowlist, time windows, expiry date
-4. **Agent authenticates** via `POST /v1/auth/agent-token` with agent ID + API key → receives a short-lived JWT
-5. **Agent requests a secret**: policy engine evaluates whether the agent has a matching policy before returning the secret
+- **Vault API** (Rust/Axum) at api.1claw.xyz — RESTful API with JWT Bearer auth
+- **Dashboard** (Next.js) at 1claw.xyz — Web UI for humans
+- **MCP Server** (TypeScript) at mcp.1claw.xyz — Model Context Protocol for AI agents
+- **SDK** (@1claw/sdk) — TypeScript client library
+- **CLI** (@1claw/cli) — Command-line tool for CI/CD and DevOps
 
-### Owner bypass
+## Authentication
 
-Vault creators always have full read/write access to their own vault. Agents that create vaults automatically have access, but cannot modify policies on human-created vaults.
+- **Human users**: Email/password, Google OAuth, or personal API keys (`1ck_` prefix)
+- **AI agents**: Three auth methods — API key (`ocv_` prefix, default), mTLS (client certificate), or OIDC Client Credentials. API key agents exchange credentials for short-lived JWT via `POST /v1/auth/agent-token`.
+- **MFA**: Optional TOTP 2FA for human logins (Pro tier and above)
+- **API keys**: `1ck_` keys work as Bearer tokens on all authenticated endpoints
 
-### Policy conditions
+## Core Concepts
 
-Policies support optional conditions:
-- **IP allowlist**: restrict access to specific IP addresses
-- **Time windows**: restrict access to specific hours/days
-- **Expiry**: policy automatically expires after a set date
+### Vaults
+Isolated containers for secrets. Each vault has its own HSM key encryption key (KEK). Secrets within a vault are envelope-encrypted: per-secret data encryption keys (DEKs) wrapped by the vault KEK.
 
-## Bi-directional Human/Agent Access
+### Secrets
+Key-value pairs stored in vaults, addressed by path (e.g., `api-keys/stripe`). Supports types: generic, password, api_key, certificate, private_key, ssh_key, env. Secrets are versioned. Optional metadata, expiry, and max access count.
 
-Both humans and agents are first-class principals. Either can create vaults, store secrets, and share access with the other.
+### Agents
+AI agent identities registered via the dashboard or API. Agents support three authentication methods: `api_key` (default, generates `ocv_` prefixed key), `mtls` (client certificate fingerprint), and `oidc_client_credentials` (OIDC issuer + client ID). All agents automatically receive an Ed25519 SSH keypair stored in a dedicated `__agent-keys` vault for future encrypted A2A messaging. Agents can be scoped to specific vaults (`vault_ids`), specific secret paths (via policies), and have a custom token TTL (`token_ttl_seconds`). Agents cannot access anything not explicitly granted by a human.
 
-- **Humans** create vaults, store secrets, register agents, grant agents scoped access via policies, view audit logs, monitor billing.
-- **Agents** can also create their own vaults, store secrets they discover or generate, and share those vaults back with their human creator or other org members. When an agent creates a vault, its human creator automatically gets full access.
-- **Same REST API** at `api.1claw.xyz` — both humans and agents authenticate with JWTs. The `created_by_type` field (`user` or `agent`) on vaults, secrets, and policies tracks who created each resource.
+### Policies
+Access control rules that bind a principal (agent or user) to a set of secret paths in a vault. Policies specify path patterns (glob), permissions (read/write), optional conditions (IP ranges, time windows), and expiry.
 
-### Security guardrails
+### Customer-Managed Encryption Keys (CMEK)
+Enterprise opt-in feature. The human generates a 256-bit AES key in the dashboard (WebCrypto). The key never leaves their device — only its SHA-256 fingerprint is stored on the server. Secrets are encrypted client-side before upload. Server-assisted rotation re-encrypts all secrets in batches of 100 with progress tracking.
 
-- Agents can only create/update/delete policies on vaults they own — they cannot modify policies on human-created vaults.
-- Auto-share ensures humans always have visibility into agent-created resources.
-- All resources are org-scoped; agents cannot reach outside their organization.
-- Every action is audit-logged with actor type and identity.
-- Agents cannot send email-based share invites (prevents email spam abuse).
-- Share links require explicit acceptance by the recipient before secrets are accessible.
-- Share creation is rate-limited to 10 per minute per organization.
-- Passphrase protection and IP allowlists on share links are enforced server-side.
+### Intents API
+Agents can sign and broadcast EVM transactions without seeing private keys. Keys stay in the HSM. Per-agent guardrails: allowed chains, recipient allowlists, per-tx value caps, daily spending limits. Supports EIP-155 legacy and EIP-1559 Type 2 transactions. Optional Tenderly simulation before signing. Replay protection via `Idempotency-Key` header (UUID, 24h TTL; auto-generated by SDK and MCP). Server-side nonce serialization with an atomic `nonce_tracker` table (`SELECT FOR UPDATE`) prevents nonce collisions across concurrent agents. `GET .../transactions/{tx_id}` redacts `signed_tx` by default; pass `?include_signed_tx=true` to include it.
 
-## Sharing
+### Sharing
+Secrets can be shared between users and agents via links (with optional passphrase and IP restrictions), direct user/agent shares, or "share back to creator" for agents. Inbound shares require explicit accept/decline.
 
-1claw has two sharing mechanisms:
+## API (OpenAPI 3.1)
 
-### 1. Policy-based vault access (primary)
+Base URL: `https://api.1claw.xyz`
 
-Use the `grant_access` tool or `POST /v1/vaults/{id}/policies` to create a fine-grained policy linking a principal (user or agent) to specific secret paths with specific permissions.
+Key endpoints:
+- `POST /v1/auth/token` — Login
+- `DELETE /v1/auth/token` — Revoke current Bearer token (returns 200; reused token then returns 401)
+- `POST /v1/auth/agent-token` — Agent token exchange
+- `GET/POST /v1/vaults` — List/create vaults
+- `GET/DELETE /v1/vaults/{id}` — Get/delete vault
+- `POST/DELETE /v1/vaults/{id}/cmek` — Enable/disable CMEK
+- `POST /v1/vaults/{id}/cmek-rotate` — Start CMEK rotation
+- `GET/PUT/DELETE /v1/vaults/{id}/secrets/{path}` — CRUD secrets
+- `GET/POST /v1/agents` — List/create agents
+- `POST /v1/agents/enroll` — Agent self-enrollment (public, emails credentials to human)
+- `GET/PATCH/DELETE /v1/agents/{id}` — Get/update/delete agent
+- `POST /v1/agents/{id}/transactions` — Submit transaction
+- `POST /v1/agents/{id}/transactions/simulate` — Simulate transaction
+- `GET/POST /v1/vaults/{id}/policies` — List/create policies
+- `GET /v1/audit/events` — Query audit log
+- `GET /v1/billing/subscription` — Billing status
+- `GET /v1/chains` — Supported blockchains
 
-### 2. One-off share links
+Full spec: https://www.npmjs.com/package/@1claw/openapi-spec
 
-Use `share_secret` or `POST /v1/secrets/{id}/share` to create a time-limited, access-counted link to a single secret. Share types:
-- `creator` — agent shares back with the human who registered it (no UUID needed, recommended for agent-to-human sharing)
-- `user` — direct share to a user by ID
-- `agent` — direct share to an agent by ID
-- `external_email` — invite-by-email (humans only, not available to agents)
-- `anyone_with_link` — open link
+**API limits and security:** Request body size is limited to 5MB (413 if exceeded). Public auth routes (e.g. login, signup) are rate-limited (5 req burst, 1/sec); 429 when exceeded. Revoked tokens (via `DELETE /v1/auth/token`) are rejected with 401.
 
-Agents can also call `GET /v1/agents/me` to retrieve their own profile (including `created_by` UUID) for more complex sharing scenarios.
+## Billing
 
-Shares support optional passphrase protection and IP allowlists, both enforced server-side. Recipients of targeted shares must explicitly accept before accessing the secret.
+- Free: 1,000 req/mo, 3 vaults, 50 secrets, 2 agents
+- Pro ($29/mo): 25,000 req/mo, 25 vaults, 500 secrets, 10 agents
+- Business ($149/mo): 100,000 req/mo, 100 vaults, 5,000 secrets, 50 agents, CMEK
+- Enterprise: Custom, unlimited, KMS delegation, BAA
 
-## Crypto Transaction Proxy
+Overage: prepaid credits or x402 on-chain micropayments on Base.
 
-Agents can be granted the ability to sign and broadcast on-chain transactions through a controlled signing proxy. Private keys stay in the HSM — the agent submits intent, the proxy signs and (optionally) broadcasts.
+## MCP Tools (for AI agents)
 
-- **Enable per-agent**: set `crypto_proxy_enabled: true` when creating or updating an agent. Disabled by default.
-- **Submit a transaction**: `POST /v1/agents/{id}/transactions` with `{ to, value, chain }`. Optional fields: `data`, `signing_key_path`, `nonce`, `gas_price`, `gas_limit`.
-- **List transactions**: `GET /v1/agents/{id}/transactions`.
-- **Get transaction**: `GET /v1/agents/{id}/transactions/{tx_id}`.
-- The backend fetches the signing key from the vault (agent must have a read policy on the key path), signs an EIP-155 legacy transaction using secp256k1, and returns the signed transaction hex + keccak tx hash.
-- If the chain has an RPC URL configured, the backend broadcasts via `eth_sendRawTransaction` and returns `status: "broadcast"`.
-- Default signing key path: `keys/{chain}-signer`. Caller can override via `signing_key_path`.
-- **Replay protection**: Callers may include an `Idempotency-Key` header (UUID, 24-hour TTL). Duplicate keys within the window return the original response. The SDK and MCP server auto-generate an idempotency key for every `submitTransaction` call.
-- **Server-side nonce serialization**: An atomic `nonce_tracker` table (`SELECT FOR UPDATE`) ensures sequential nonce assignment per signing address per chain. Eliminates nonce collisions when multiple agents share a signer.
-- **Signed-tx redaction**: `GET /v1/agents/{id}/transactions/{tx_id}` omits `signed_tx` by default. Pass `?include_signed_tx=true` to include it.
-- Key properties: disabled by default, signing keys never leave the server, every transaction is audit-logged, revocable instantly.
+The MCP server at mcp.1claw.xyz provides these tools:
+- list_secrets, get_secret, put_secret, delete_secret, describe_secret
+- rotate_and_store, get_env_bundle
+- create_vault, list_vaults, grant_access, share_secret
+- simulate_transaction, submit_transaction
 
-## Chain Registry
-
-1claw maintains a configurable registry of supported blockchains.
-
-- **List enabled chains**: `GET /v1/chains` — returns name, chain_id, explorer URL, native currency, testnet flag.
-- **Get chain details**: `GET /v1/chains/{name_or_chain_id}` — look up by name (e.g. "base") or numeric ID (e.g. "8453").
-- **Admin management**: `POST /v1/admin/chains`, `PUT /v1/admin/chains/{id}`, `DELETE /v1/admin/chains/{id}` — add chains, configure RPC URLs, enable/disable.
-- Default chains: Ethereum (1), Base (8453), Optimism (10), Arbitrum One (42161), Polygon (137), Sepolia (11155111), Base Sepolia (84532).
-- Configuring an RPC URL on a chain enables automatic transaction broadcasting for the crypto proxy.
-
-## TypeScript SDK (@1claw/sdk)
-
-The TypeScript SDK (`npm install @1claw/sdk`) provides a typed client for the 1claw API. It is structured as:
-- `core/` — Client, HTTP transport, error classes
-- `resources/` — 13 resource modules (vault, secrets, access, agents, chains, sharing, approvals, billing, audit, org, auth, apiKeys, x402)
-- `plugins/` — Extensibility interfaces: `CryptoProvider` (client-side encryption), `AuditSink` (forward events to external systems), `PolicyEngine` (local policy pre-evaluation)
-- `generated/` — TypeScript types auto-generated from the OpenAPI spec via `openapi-typescript`
-
-Plugin interfaces let developers create custom provider packages without modifying the SDK. The `OneclawClientConfig` accepts an optional `plugins` field.
-
-## OpenAPI Spec (@1claw/openapi-spec)
-
-The OpenAPI 3.1.0 specification is published as `@1claw/openapi-spec` on npm. Use it to generate API clients in any language:
-- TypeScript: `npx openapi-typescript node_modules/@1claw/openapi-spec/openapi.yaml -o src/types.ts`
-- Python: `openapi-generator generate -i node_modules/@1claw/openapi-spec/openapi.yaml -g python`
-- Go: `openapi-generator generate -i node_modules/@1claw/openapi-spec/openapi.yaml -g go`
-
-GitHub: [1clawAI/1claw-openapi-spec](https://github.com/1clawAI/1claw-openapi-spec)
-
-## MCP Server
-
-1claw provides a Model Context Protocol (MCP) server that gives AI agents (Claude, Cursor, GPT) just-in-time access to vault secrets.
-
-- **Hosted** at `mcp.1claw.xyz` — no installation needed; authenticate with `Authorization` and `X-Vault-ID` headers.
-- **Local (stdio)** — run via Claude Desktop or Cursor with agent token and vault ID as env vars.
-- **11 tools**: `list_secrets`, `get_secret`, `put_secret`, `delete_secret`, `describe_secret`, `rotate_and_store`, `get_env_bundle`, `create_vault`, `list_vaults`, `grant_access`, `share_secret`.
-- **Resource**: `vault://secrets` — browsable listing of all secret paths.
-- Secrets are fetched just-in-time, never cached, never logged.
-- Agents can create vaults (`create_vault`), discover available vaults (`list_vaults`), share access with humans or other agents (`grant_access`), and share individual secrets (`share_secret`).
-
-## Billing & Usage
-
-- **Free tier**: 1,000 API requests/month per organization.
-- **Pay-per-use**: x402 micropayments on Base (EIP-155:8453) after free tier.
-- **Pricing**: Read secret $0.001, write $0.005, share $0.002, audit $0.0005.
-- **Facilitator**: Payment verification and settlement uses the Coinbase CDP x402 facilitator (default: `https://api.cdp.coinbase.com/platform/v2/x402`). Requires `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET` env vars for Ed25519 JWT authentication. Platform admins can configure the facilitator URL in Admin Settings.
-- Usage is tracked across dashboard, SDK, and MCP — all count against the same quota.
-
-## Web dashboard
-
-At [1claw.xyz](https://1claw.xyz) you sign in (email/password or Google), then use the sidebar: **Dashboard**, **Vaults**, **Agents**, **Sharing**, **Audit Log**, **Security**, **API Keys**, **Billing**, **Team**. Create vaults and secrets under Vaults; register agents under Agents; manage members under Team; view usage under Billing.
-
-## Core concepts
-
-- **Vault** — A container for secrets; each vault has its own HSM-backed key (KEK). Both humans and agents can create vaults. Agent-created vaults are automatically shared with the agent's human creator.
-- **Secret** — An encrypted credential stored in the vault (API key, token, password, certificate, etc.) at a path (e.g. `passwords/one`, `api-keys/stripe`).
-- **Agent** — A registered AI entity (Claude, GPT, custom bot, MCP server) that receives an API key and can be granted access via policies. Agents are first-class principals that can create vaults, store secrets, and share access.
-- **Policy (grant)** — Links a principal (user or agent) to secret path patterns with permissions (read, write, delete, etc.) and optional conditions/expiry. This is the primary access control mechanism.
-- **Share link** — A one-off, time-limited link to a single secret. Recipients must explicitly accept before accessing. Separate from policy-based access.
-- **Principal type** — Every creator is tracked with a `created_by_type` of `user` or `agent`, matching the JWT `sub` claim format (`user:UUID` or `agent:UUID`).
-- **Chain** — A registered blockchain in the chain registry. Each chain has a name, chain_id, optional RPC URL (for broadcasting), explorer URL, and native currency.
-- **Transaction** — A signed EVM transaction created via the crypto proxy. Agents submit intents; the backend signs using vault-stored keys.
-- **HSM** — Hardware Security Module; in production 1claw uses Google Cloud KMS. DEKs wrap secrets; KEKs wrap DEKs and never leave the HSM.
-- **Human auth** — Email/password or Google OAuth → JWT. Personal API keys (`1ck_`) also get a JWT.
-- **Agent auth** — Agent API key (`ocv_`) exchanged for a short-lived JWT via `POST /v1/auth/agent-token`.
-
-## Docs
-
-- [Introduction](https://docs.1claw.xyz/docs/intro)
-- [Quickstart for Humans](https://docs.1claw.xyz/docs/quickstart/humans)
-- [Quickstart for Agents](https://docs.1claw.xyz/docs/quickstart/agents)
-- [Human API Reference](https://docs.1claw.xyz/docs/human-api/overview)
-- [Agent API Reference](https://docs.1claw.xyz/docs/agent-api/overview)
-- [MCP Server Overview](https://docs.1claw.xyz/docs/mcp/overview)
-- [MCP Setup Guide](https://docs.1claw.xyz/docs/mcp/setup)
-- [MCP Tool Reference](https://docs.1claw.xyz/docs/mcp/tools)
-- [Billing & Usage](https://docs.1claw.xyz/docs/guides/billing-and-usage)
-- [Security & HSM Architecture](https://docs.1claw.xyz/docs/security/hsm-overview)
-- [Full API Reference](https://docs.1claw.xyz/docs/reference/api-reference)
-
-## Optional
-
-- [llms-full.txt](https://docs.1claw.xyz/llms-full.txt)
+Configure in Claude Desktop, Cursor, or any MCP-compatible client with agent credentials.

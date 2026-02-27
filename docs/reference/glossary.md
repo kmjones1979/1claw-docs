@@ -46,4 +46,4 @@ Terms you’ll see in the API, dashboard, SDK, and CLI.
 
 **x402** — A protocol for per-request payment. When your tier’s request quota is exceeded and you’ve chosen x402 as your overage method, the API can return 402 Payment Required with payment details; after payment, you retry the request. See [Billing & Usage](/docs/guides/billing-and-usage).
 
-**Crypto proxy** — A feature that lets agents sign and broadcast on-chain transactions without ever reading the private key. When enabled for an agent, the agent is blocked from reading `private_key` and `ssh_key` secrets; it must use the transaction endpoints. See [Crypto Transaction Proxy](/docs/guides/crypto-proxy).
+**Intents API** — A feature that lets agents sign and broadcast on-chain transactions without ever reading the private key. When enabled for an agent, the agent is blocked from reading `private_key` and `ssh_key` secrets; it must use the transaction endpoints. See [Intents API](/docs/guides/intents-api).

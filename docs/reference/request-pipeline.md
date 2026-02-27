@@ -27,14 +27,14 @@ So for example: if your token is invalid, you get **401** before any 402 or rate
 
 - **Public routes** (e.g. `POST /v1/auth/token`, `GET /v1/health`) — No auth layer; rate limit and audit still apply.
 - **Share access** (`GET /v1/share/:share_id`) — Unauthenticated; only x402 (and rate limit at the outer layer) apply. Passphrase and IP allowlist are enforced inside the handler.
-- **Crypto proxy routes** (e.g. `POST /v1/agents/:id/transactions`) — Same as authenticated, plus a check that the JWT has `crypto_proxy_enabled`. Without it → **403**.
+- **Intents API routes** (e.g. `POST /v1/agents/:id/transactions`) — Same as authenticated, plus a check that the JWT has `intents_api_enabled`. Without it → **403**.
 - **Webhook** (`POST /v1/billing/webhooks`) — No auth middleware; Stripe signature verification is done in the handler.
 
 ## What you can rely on
 
 - **401** always means auth failed (missing, invalid, or expired token or API key). Fix by re-authenticating or rotating the key.
 - **402** means payment or quota is required for this request (tier limit exceeded; pay via x402 or use prepaid credits). See [Billing & Usage](/docs/guides/billing-and-usage).
-- **403** can mean: no permission for this resource (policy), resource limit exceeded (subscription tier), IP denied, or (on crypto proxy routes) agent not allowed to sign. The response body `type` and `detail` distinguish these.
+- **403** can mean: no permission for this resource (policy), resource limit exceeded (subscription tier), IP denied, or (on Intents API routes) agent not allowed to sign. The response body `type` and `detail` distinguish these.
 - **429** means you hit the global rate limit. Back off and retry; optional `Retry-After` header indicates when to retry.
 
 See [Error codes](/docs/reference/error-codes) for the full list of status codes and problem details.

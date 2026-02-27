@@ -30,7 +30,7 @@ See [Agent keys](/docs/security/agent-keys) for details on key formats and how t
 | auth_method          | string  | ❌       | Default `api_key`                                                                                                                                                                                                                                               |
 | scopes               | array   | ❌       | Optional scope strings                                                                                                                                                                                                                                          |
 | expires_at           | string  | ❌       | ISO 8601; agent token exchange fails after this                                                                                                                                                                                                                 |
-| crypto_proxy_enabled | boolean | ❌       | Default `false`. When `true`, the agent **must** use the transaction proxy to broadcast crypto transactions and is **blocked** from reading `private_key` and `ssh_key` type secrets directly. See [Crypto Transaction Proxy](#crypto-transaction-proxy) below. |
+| intents_api_enabled | boolean | ❌       | Default `false`. When `true`, the agent **must** use the Intents API to broadcast crypto transactions and is **blocked** from reading `private_key` and `ssh_key` type secrets directly. See [Intents API](#intents-api) below. |
 
 ## Example request
 
@@ -44,7 +44,7 @@ curl -X POST "https://api.1claw.xyz/v1/agents" \
   -d '{
     "name": "DeFi Bot",
     "description": "Automated trading agent",
-    "crypto_proxy_enabled": true,
+    "intents_api_enabled": true,
     "scopes": ["vaults:read"]
   }'
 ```
@@ -56,7 +56,7 @@ curl -X POST "https://api.1claw.xyz/v1/agents" \
 const { data } = await client.agents.create({
   name: "DeFi Bot",
   description: "Automated trading agent",
-  crypto_proxy_enabled: true,
+  intents_api_enabled: true,
   scopes: ["vaults:read"],
 });
 console.log(data.agent.id, data.api_key); // Store api_key securely
@@ -76,7 +76,7 @@ console.log(data.agent.id, data.api_key); // Store api_key securely
         "auth_method": "api_key",
         "scopes": ["vaults:read"],
         "is_active": true,
-        "crypto_proxy_enabled": true,
+        "intents_api_enabled": true,
         "ssh_public_key": "m+Z6jV5W86WMTV27cpk9QGXIo+fP1OX88dHxdj6DHUI=",
         "ecdh_public_key": "BDq8k3Lw...base64...65bytes...",
         "created_at": "2026-02-18T12:00:00Z"
@@ -87,11 +87,11 @@ console.log(data.agent.id, data.api_key); // Store api_key securely
 
 Store the `api_key` securely; it cannot be retrieved again. Use [Deactivate agent / Rotate key](/docs/human-api/agents/deactivate-agent#rotate-agent-key) to get a new key if needed.
 
-## Crypto Transaction Proxy
+## Intents API
 
-When `crypto_proxy_enabled` is set to `true`:
+When `intents_api_enabled` is set to `true`:
 
-1. **Transaction proxy access** — The agent can call `POST /v1/agents/:id/transactions` to submit transactions that the signing proxy will broadcast using keys stored in the vault.
+1. **Intents API access** — The agent can call `POST /v1/agents/:id/transactions` to submit transactions that the signing proxy will broadcast using keys stored in the vault.
 
 2. **Private key reads blocked** — The agent is **blocked** from reading secrets of type `private_key` or `ssh_key` through the normal `GET /v1/vaults/:vault_id/secrets/:path` endpoint. Any attempt returns `403 Forbidden`.
 

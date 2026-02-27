@@ -55,7 +55,7 @@ Each event includes `id`, `org_id`, `actor_type`, `actor_id`, `action`, `resourc
 - `auth.success`, `auth.failure` — Authentication attempts (no credentials logged).
 - `policy.create`, `policy.update`, `policy.delete` — Access policy changes.
 - `agent.register`, `agent.rotate_key`, `agent.deactivate` — Agent lifecycle events.
-- `transaction.submit` — Transaction submitted via crypto proxy.
+- `transaction.submit` — Transaction submitted via Intents API.
 - `transaction.simulate` — Transaction simulation requested.
 
 ## Tamper-evident hash chain

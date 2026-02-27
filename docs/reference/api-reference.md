@@ -109,6 +109,12 @@ All endpoints are under **/v1**.
 | PUT    | `/v1/vaults/:vault_id/policies/:policy_id` | Update policy |
 | DELETE | `/v1/vaults/:vault_id/policies/:policy_id` | Delete policy |
 
+## Agent Self-Enrollment (Public)
+
+| Method | Path               | Description                                                                |
+| ------ | ------------------ | -------------------------------------------------------------------------- |
+| POST   | `/v1/agents/enroll`| Self-enroll an agent; credentials emailed to human (no auth required)      |
+
 ## Agents
 
 | Method | Path                              | Description                                             |
@@ -117,7 +123,7 @@ All endpoints are under **/v1**.
 | GET    | `/v1/agents`                      | List agents                                             |
 | GET    | `/v1/agents/me`                   | Get calling agent's own profile (includes `created_by`) |
 | GET    | `/v1/agents/:agent_id`            | Get agent                                               |
-| PATCH  | `/v1/agents/:agent_id`            | Update agent (name, description, crypto_proxy_enabled)  |
+| PATCH  | `/v1/agents/:agent_id`            | Update agent (name, description, intents_api_enabled)  |
 | DELETE | `/v1/agents/:agent_id`            | Deactivate agent                                        |
 | POST   | `/v1/agents/:agent_id/rotate-key` | Rotate agent API key                                    |
 
@@ -139,9 +145,9 @@ All endpoints are under **/v1**.
 | GET    | `/v1/chains`             | List supported blockchain chains |
 | GET    | `/v1/chains/:identifier` | Get chain by ID or chain_id      |
 
-## Transactions (Crypto Proxy)
+## Transactions (Intents API)
 
-Requires `crypto_proxy_enabled: true` on the agent. When enabled, the agent is also **blocked** from reading `private_key` and `ssh_key` type secrets through the standard secrets endpoint — it must use the proxy to sign transactions.
+Requires `intents_api_enabled: true` on the agent. When enabled, the agent is also **blocked** from reading `private_key` and `ssh_key` type secrets through the standard secrets endpoint — it must use the proxy to sign transactions.
 
 | Method | Path                                                | Description                                                    |
 | ------ | --------------------------------------------------- | -------------------------------------------------------------- |
@@ -223,5 +229,5 @@ Admin endpoints are for platform operators only. They are not documented in deta
 - Secret paths are wildcard routes — e.g. `api-keys/openai`, `config/prod/db`.
 - **POST /v1/auth/refresh** exists but returns **400** with "Refresh tokens not yet implemented". Use token issuance (e.g. `POST /v1/auth/token` or `POST /v1/auth/agent-token`) instead.
 - Request processing order (rate limit, auth, billing, handler) and how to interpret 401, 402, 403, 429: see [Request pipeline](/docs/reference/request-pipeline).
-- Crypto proxy routes additionally require the `crypto_proxy_enabled` claim in the JWT.
+- Intents API routes additionally require the `intents_api_enabled` claim in the JWT.
 - See [Authentication](/docs/human-api/authentication) for details on obtaining JWTs.

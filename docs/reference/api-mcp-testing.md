@@ -240,7 +240,7 @@ curl -s -X POST "$API/v1/agents" \
   -d '{
     "name": "test-agent",
     "description": "A test agent",
-    "crypto_proxy_enabled": false
+    "intents_api_enabled": false
   }' \
   | python3 -m json.tool
 # Save the returned agent_id and api_key (ocv_...)
@@ -260,7 +260,7 @@ curl -s "$API/v1/agents/$AGENT_ID" \
 curl -s -X PATCH "$API/v1/agents/$AGENT_ID" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name":"renamed-agent","crypto_proxy_enabled":true}' \
+  -d '{"name":"renamed-agent","intents_api_enabled":true}' \
   | python3 -m json.tool
 
 # Rotate agent API key
@@ -376,9 +376,9 @@ curl -s "$API/v1/chains/1" \
 
 ---
 
-## 10. Transactions (Crypto Proxy)
+## 10. Transactions (Intents API)
 
-The agent must have `crypto_proxy_enabled: true`. Use the agent's JWT. When enabled, the agent is blocked from reading `private_key` and `ssh_key` secrets directly — it must use these proxy endpoints instead.
+The agent must have `intents_api_enabled: true`. Use the agent's JWT. When enabled, the agent is blocked from reading `private_key` and `ssh_key` secrets directly — it must use these proxy endpoints instead.
 
 ```bash
 # Submit a transaction

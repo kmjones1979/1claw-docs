@@ -92,9 +92,9 @@ Beyond scopes and vault binding, access policies support runtime conditions:
 
 These conditions are evaluated by the policy engine on every request and can further narrow what a valid, in-scope token is allowed to do.
 
-## 5. Crypto proxy and transaction guardrails
+## 5. Intents API and transaction guardrails
 
-For agents that interact with blockchains, enable the **crypto transaction proxy** to prevent the agent from reading raw private keys. The agent submits transactions through a proxy that signs on its behalf.
+For agents that interact with blockchains, enable the **Intents API** to prevent the agent from reading raw private keys. The agent submits transactions through a proxy that signs on its behalf.
 
 Additionally, configure **transaction guardrails**:
 
@@ -103,7 +103,7 @@ Additionally, configure **transaction guardrails**:
 - `tx_daily_limit_eth`: Rolling 24-hour spend cap.
 - `tx_allowed_chains`: Restrict to specific chains.
 
-See [Crypto Proxy guide](/docs/guides/crypto-proxy) for details.
+See [Intents API guide](/docs/guides/intents-api) for details.
 
 ## Checklist for production agents
 
@@ -112,5 +112,5 @@ See [Crypto Proxy guide](/docs/guides/crypto-proxy) for details.
 - [ ] Access policies use narrow path patterns (not `**`)
 - [ ] Scopes are derived from policies (don't manually set `["*"]`)
 - [ ] IP allowlist set if the agent runs from known infrastructure
-- [ ] Crypto proxy enabled if the agent handles blockchain operations
+- [ ] Intents API enabled if the agent handles blockchain operations
 - [ ] Agent key rotated on a regular schedule
