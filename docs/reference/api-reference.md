@@ -82,6 +82,15 @@ All endpoints are under **/v1**.
 | GET    | `/v1/vaults/:vault_id` | Get vault    |
 | DELETE | `/v1/vaults/:vault_id` | Delete vault |
 
+## CMEK (Customer-Managed Encryption Keys)
+
+| Method | Path                                           | Description                    |
+| ------ | ---------------------------------------------- | ------------------------------ |
+| POST   | `/v1/vaults/:vault_id/cmek`                    | Enable CMEK on a vault         |
+| DELETE | `/v1/vaults/:vault_id/cmek`                    | Disable CMEK on a vault        |
+| POST   | `/v1/vaults/:vault_id/cmek-rotate`             | Start CMEK key rotation job    |
+| GET    | `/v1/vaults/:vault_id/cmek-rotate/:job_id`     | Get rotation job status        |
+
 ## Secrets
 
 | Method | Path                                 | Description                  |
@@ -123,7 +132,7 @@ All endpoints are under **/v1**.
 | POST   | `/v1/shares/:share_id/decline` | Decline an inbound share                                                        |
 | DELETE | `/v1/share/:share_id`          | Revoke share (creator only)                                                     |
 
-## Chains
+## Chains (public, no auth)
 
 | Method | Path                     | Description                      |
 | ------ | ------------------------ | -------------------------------- |
@@ -204,6 +213,7 @@ Admin endpoints are for platform operators only. They are not documented in deta
 | DELETE | `/v1/admin/chains/:chain_id`    | Delete chain                 |
 | GET    | `/v1/admin/orgs/:org_id/limits` | Get org limits               |
 | PUT    | `/v1/admin/orgs/:org_id/limits` | Update org limits            |
+| PUT    | `/v1/admin/orgs/:org_id/billing-tier` | Set org billing tier (free/pro/business) |
 
 ---
 

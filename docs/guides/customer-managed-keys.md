@@ -1,3 +1,9 @@
+---
+title: Customer-Managed Encryption Keys (CMEK)
+description: Add a client-side AES-256-GCM encryption layer on top of HSM envelope encryption. Your key never touches the server.
+sidebar_position: 5
+---
+
 # Customer-Managed Encryption Keys (CMEK)
 
 CMEK adds a **client-side encryption layer** on top of 1claw's HSM-backed envelope encryption. Your key never touches 1claw servers — only its SHA-256 fingerprint is stored so the vault can track which key was used.
@@ -24,6 +30,15 @@ At rest, each secret is wrapped in two independent encryption layers. A full ser
 ```
 
 The version byte allows future algorithm changes without breaking existing secrets.
+
+## API endpoints
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| POST | `/v1/vaults/:vault_id/cmek` | Enable CMEK (send fingerprint only) |
+| DELETE | `/v1/vaults/:vault_id/cmek` | Disable CMEK |
+| POST | `/v1/vaults/:vault_id/cmek-rotate` | Start key rotation (old+new keys in headers) |
+| GET | `/v1/vaults/:vault_id/cmek-rotate/:job_id` | Poll rotation job status |
 
 ## Enabling CMEK
 

@@ -264,6 +264,30 @@ curl -H "Authorization: Bearer $TOKEN" \
   "https://api.1claw.xyz/v1/billing/history?limit=50"
 ```
 
+## Quota Response Headers
+
+Every authenticated API response includes headers that let you monitor usage programmatically without polling the billing endpoint:
+
+| Header | Description |
+| ------ | ----------- |
+| `X-RateLimit-Requests-Used` | Requests consumed this billing period |
+| `X-RateLimit-Requests-Limit` | Tier request limit for this period |
+| `X-RateLimit-Requests-Percent` | Usage percentage (e.g. `74`) |
+| `X-Quota-Warning` | Present when usage exceeds 80% of the tier limit |
+| `X-Credit-Balance-Cents` | Current credit balance in cents |
+| `X-Credit-Expiring-Soon` | Present when credits expire within 30 days |
+| `X-Overage-Method` | Active overage method (`credits` or `x402`) |
+
+These headers are useful for building dashboards, alerting on approaching limits, and triggering automatic credit top-ups.
+
+:::tip Programmatic monitoring
+Check `X-Quota-Warning` and `X-RateLimit-Requests-Percent` after each API call to trigger alerts before your quota is exhausted.
+:::
+
+## Credit Expiry
+
+Prepaid credits expire **12 months** after purchase. The system sends automated email reminders at 30 days and 7 days before expiry. A nightly job at 00:05 UTC processes expired top-ups. Credits are consumed in FIFO order (oldest first), so topping up regularly ensures you always have fresh credits.
+
 ## MCP and Billing
 
 MCP tool calls go through the same vault API and count toward the same usage quota. When an agent calls `get_secret` via MCP, that's one API request.

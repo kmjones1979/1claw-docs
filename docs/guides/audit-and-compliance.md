@@ -18,14 +18,45 @@ All API access (and relevant failures) can be recorded in an **audit log**. Secr
 - `from`, `to` — Time range (ISO 8601).
 - `limit`, `offset` — Pagination.
 
-Response shape: `{ "events": [ ... ], "count": N }`. Each event typically has id, org_id, actor_type, actor_id, action, resource_type, resource_id, metadata, timestamp.
+### Example request
+
+```bash
+curl "https://api.1claw.xyz/v1/audit/events?action=secret.read&limit=25" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Example response
+
+```json
+{
+  "events": [
+    {
+      "id": "a7e2c...",
+      "action": "secret.read",
+      "actor_id": "agent-uuid",
+      "actor_type": "agent",
+      "resource_type": "secret",
+      "resource_id": "secret-uuid",
+      "org_id": "org-uuid",
+      "details": { "vault_id": "vault-uuid", "path": "keys/eth-signer" },
+      "ip_address": "203.0.113.50",
+      "created_at": "2026-02-27T14:00:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+Each event includes `id`, `org_id`, `actor_type`, `actor_id`, `action`, `resource_type`, `resource_id`, `details`, `ip_address`, and `created_at`.
 
 ## Typical events
 
-- Secret read/write/delete (path and actor; no value).
-- Auth success/failure (no credentials).
-- Policy create/update/delete.
-- Agent registration, key rotation, deactivation.
+- `secret.read`, `secret.write`, `secret.delete` — Secret access (path and actor; no value).
+- `auth.success`, `auth.failure` — Authentication attempts (no credentials logged).
+- `policy.create`, `policy.update`, `policy.delete` — Access policy changes.
+- `agent.register`, `agent.rotate_key`, `agent.deactivate` — Agent lifecycle events.
+- `transaction.submit` — Transaction submitted via crypto proxy.
+- `transaction.simulate` — Transaction simulation requested.
 
 ## Tamper-evident hash chain
 
@@ -39,3 +70,7 @@ This makes the audit log **append-only and tamper-evident**: modifying or deleti
 ## Best practices
 
 Use the audit log for compliance reviews, incident response, and access analysis. Export or forward events to your SIEM or logging pipeline as needed.
+
+### SDK AuditSink plugin
+
+The TypeScript SDK supports an `AuditSink` plugin interface for forwarding audit events to external systems (e.g. Splunk, Datadog, or a custom webhook). Register a sink when constructing the client and every event your SDK session produces will be mirrored to your target in real time. See the [SDK overview](/docs/sdks/overview) for details on the plugin architecture.

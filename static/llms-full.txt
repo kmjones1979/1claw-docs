@@ -672,14 +672,45 @@ All API access (and relevant failures) can be recorded in an **audit log**. Secr
 - `from`, `to` — Time range (ISO 8601).
 - `limit`, `offset` — Pagination.
 
-Response shape: `{ "events": [ ... ], "count": N }`. Each event typically has id, org_id, actor_type, actor_id, action, resource_type, resource_id, metadata, timestamp.
+### Example request
+
+```bash
+curl "https://api.1claw.xyz/v1/audit/events?action=secret.read&limit=25" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Example response
+
+```json
+{
+  "events": [
+    {
+      "id": "a7e2c...",
+      "action": "secret.read",
+      "actor_id": "agent-uuid",
+      "actor_type": "agent",
+      "resource_type": "secret",
+      "resource_id": "secret-uuid",
+      "org_id": "org-uuid",
+      "details": { "vault_id": "vault-uuid", "path": "keys/eth-signer" },
+      "ip_address": "203.0.113.50",
+      "created_at": "2026-02-27T14:00:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+Each event includes `id`, `org_id`, `actor_type`, `actor_id`, `action`, `resource_type`, `resource_id`, `details`, `ip_address`, and `created_at`.
 
 ## Typical events
 
-- Secret read/write/delete (path and actor; no value).
-- Auth success/failure (no credentials).
-- Policy create/update/delete.
-- Agent registration, key rotation, deactivation.
+- `secret.read`, `secret.write`, `secret.delete` — Secret access (path and actor; no value).
+- `auth.success`, `auth.failure` — Authentication attempts (no credentials logged).
+- `policy.create`, `policy.update`, `policy.delete` — Access policy changes.
+- `agent.register`, `agent.rotate_key`, `agent.deactivate` — Agent lifecycle events.
+- `transaction.submit` — Transaction submitted via crypto proxy.
+- `transaction.simulate` — Transaction simulation requested.
 
 ## Tamper-evident hash chain
 
@@ -693,6 +724,10 @@ This makes the audit log **append-only and tamper-evident**: modifying or deleti
 ## Best practices
 
 Use the audit log for compliance reviews, incident response, and access analysis. Export or forward events to your SIEM or logging pipeline as needed.
+
+### SDK AuditSink plugin
+
+The TypeScript SDK supports an `AuditSink` plugin interface for forwarding audit events to external systems (e.g. Splunk, Datadog, or a custom webhook). Register a sink when constructing the client and every event your SDK session produces will be mirrored to your target in real time. See the [SDK overview](/docs/sdks/overview) for details on the plugin architecture.
 
 
 ---
@@ -964,6 +999,30 @@ curl -H "Authorization: Bearer $TOKEN" \
 curl -H "Authorization: Bearer $TOKEN" \
   "https://api.1claw.xyz/v1/billing/history?limit=50"
 ```
+
+## Quota Response Headers
+
+Every authenticated API response includes headers that let you monitor usage programmatically without polling the billing endpoint:
+
+| Header | Description |
+| ------ | ----------- |
+| `X-RateLimit-Requests-Used` | Requests consumed this billing period |
+| `X-RateLimit-Requests-Limit` | Tier request limit for this period |
+| `X-RateLimit-Requests-Percent` | Usage percentage (e.g. `74`) |
+| `X-Quota-Warning` | Present when usage exceeds 80% of the tier limit |
+| `X-Credit-Balance-Cents` | Current credit balance in cents |
+| `X-Credit-Expiring-Soon` | Present when credits expire within 30 days |
+| `X-Overage-Method` | Active overage method (`credits` or `x402`) |
+
+These headers are useful for building dashboards, alerting on approaching limits, and triggering automatic credit top-ups.
+
+:::tip Programmatic monitoring
+Check `X-Quota-Warning` and `X-RateLimit-Requests-Percent` after each API call to trigger alerts before your quota is exhausted.
+:::
+
+## Credit Expiry
+
+Prepaid credits expire **12 months** after purchase. The system sends automated email reminders at 30 days and 7 days before expiry. A nightly job at 00:05 UTC processes expired top-ups. Credits are consumed in FIFO order (oldest first), so topping up regularly ensures you always have fresh credits.
 
 ## MCP and Billing
 
@@ -1647,6 +1706,12 @@ The initial POST submission always returns `signed_tx` for the originating calle
 
 ## Customer-Managed Encryption Keys (CMEK)
 
+---
+title: Customer-Managed Encryption Keys (CMEK)
+description: Add a client-side AES-256-GCM encryption layer on top of HSM envelope encryption. Your key never touches the server.
+sidebar_position: 5
+---
+
 # Customer-Managed Encryption Keys (CMEK)
 
 CMEK adds a **client-side encryption layer** on top of 1claw's HSM-backed envelope encryption. Your key never touches 1claw servers — only its SHA-256 fingerprint is stored so the vault can track which key was used.
@@ -1673,6 +1738,15 @@ At rest, each secret is wrapped in two independent encryption layers. A full ser
 ```
 
 The version byte allows future algorithm changes without breaking existing secrets.
+
+## API endpoints
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| POST | `/v1/vaults/:vault_id/cmek` | Enable CMEK (send fingerprint only) |
+| DELETE | `/v1/vaults/:vault_id/cmek` | Disable CMEK |
+| POST | `/v1/vaults/:vault_id/cmek-rotate` | Start key rotation (old+new keys in headers) |
+| GET | `/v1/vaults/:vault_id/cmek-rotate/:job_id` | Poll rotation job status |
 
 ## Enabling CMEK
 
@@ -6118,6 +6192,15 @@ All endpoints are under **/v1**.
 | GET    | `/v1/vaults/:vault_id` | Get vault    |
 | DELETE | `/v1/vaults/:vault_id` | Delete vault |
 
+## CMEK (Customer-Managed Encryption Keys)
+
+| Method | Path                                           | Description                    |
+| ------ | ---------------------------------------------- | ------------------------------ |
+| POST   | `/v1/vaults/:vault_id/cmek`                    | Enable CMEK on a vault         |
+| DELETE | `/v1/vaults/:vault_id/cmek`                    | Disable CMEK on a vault        |
+| POST   | `/v1/vaults/:vault_id/cmek-rotate`             | Start CMEK key rotation job    |
+| GET    | `/v1/vaults/:vault_id/cmek-rotate/:job_id`     | Get rotation job status        |
+
 ## Secrets
 
 | Method | Path                                 | Description                  |
@@ -6159,7 +6242,7 @@ All endpoints are under **/v1**.
 | POST   | `/v1/shares/:share_id/decline` | Decline an inbound share                                                        |
 | DELETE | `/v1/share/:share_id`          | Revoke share (creator only)                                                     |
 
-## Chains
+## Chains (public, no auth)
 
 | Method | Path                     | Description                      |
 | ------ | ------------------------ | -------------------------------- |
@@ -6240,6 +6323,7 @@ Admin endpoints are for platform operators only. They are not documented in deta
 | DELETE | `/v1/admin/chains/:chain_id`    | Delete chain                 |
 | GET    | `/v1/admin/orgs/:org_id/limits` | Get org limits               |
 | PUT    | `/v1/admin/orgs/:org_id/limits` | Update org limits            |
+| PUT    | `/v1/admin/orgs/:org_id/billing-tier` | Set org billing tier (free/pro/business) |
 
 ---
 
