@@ -65,6 +65,7 @@ const config: Config = {
                     position: "left",
                 },
                 { to: "/docs/mcp/overview", label: "MCP", position: "left" },
+                { type: "search", position: "right" },
                 {
                     href: "https://github.com/1clawAI",
                     label: "GitHub",

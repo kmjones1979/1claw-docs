@@ -27,6 +27,17 @@ The **/v1** API is stable. Breaking changes would be accompanied by a new versio
 - **New:** Dashboard Transaction Builder on the agent detail page — simulate, review balance changes, then confirm and send.
 - **New:** Transaction history table on the agent detail page with simulation status badges and tx hash copy.
 
+### Transaction replay protection & response hardening
+
+- **New:** `Idempotency-Key` header on `POST /v1/agents/:agent_id/transactions` — duplicate requests with the same key within 24 hours return the cached response (200) instead of signing and broadcasting again. In-progress duplicates return 409 Conflict.
+- **New:** Server-side nonce serialization — when `nonce` is omitted, the server atomically reserves the next nonce per agent+chain+address via `SELECT FOR UPDATE` locking, preventing nonce collisions between concurrent requests.
+- **New:** `signed_tx` redacted by default — GET transaction endpoints omit the raw signed transaction hex. Pass `?include_signed_tx=true` to include it. The initial POST submission always returns it.
+- **New:** `transaction_idempotency` and `nonce_tracker` database tables (migrations 034, 035).
+- **New:** Nightly cleanup of expired idempotency keys (>48h) in the existing credit expiry background job.
+- **Updated:** SDK `submitTransaction()` auto-generates an `Idempotency-Key` header (UUID). Callers can override via `options.idempotencyKey`.
+- **Updated:** MCP `submit_transaction` tool auto-generates an `Idempotency-Key` header.
+- **Updated:** OpenAPI spec documents `Idempotency-Key` header and `include_signed_tx` query parameter.
+
 ### Admin user management
 
 - **New:** `DELETE /v1/admin/users/:user_id` — platform admins can delete users. Cascades: delete share links created by the user, clear `agents.created_by`, then delete the user (device_auth_codes and user_api_keys CASCADE in DB). Cannot delete self or the last owner of the platform org.

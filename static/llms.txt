@@ -84,6 +84,9 @@ Agents can be granted the ability to sign and broadcast on-chain transactions th
 - The backend fetches the signing key from the vault (agent must have a read policy on the key path), signs an EIP-155 legacy transaction using secp256k1, and returns the signed transaction hex + keccak tx hash.
 - If the chain has an RPC URL configured, the backend broadcasts via `eth_sendRawTransaction` and returns `status: "broadcast"`.
 - Default signing key path: `keys/{chain}-signer`. Caller can override via `signing_key_path`.
+- **Replay protection**: Callers may include an `Idempotency-Key` header (UUID, 24-hour TTL). Duplicate keys within the window return the original response. The SDK and MCP server auto-generate an idempotency key for every `submitTransaction` call.
+- **Server-side nonce serialization**: An atomic `nonce_tracker` table (`SELECT FOR UPDATE`) ensures sequential nonce assignment per signing address per chain. Eliminates nonce collisions when multiple agents share a signer.
+- **Signed-tx redaction**: `GET /v1/agents/{id}/transactions/{tx_id}` omits `signed_tx` by default. Pass `?include_signed_tx=true` to include it.
 - Key properties: disabled by default, signing keys never leave the server, every transaction is audit-logged, revocable instantly.
 
 ## Chain Registry

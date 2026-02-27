@@ -18,8 +18,8 @@ Agent                       1claw Vault                  Blockchain
   │                             │                            │
   │  POST /v1/agents/:id/       │                            │
   │    transactions             │                            │
-  │  { chain_id, to, value,     │                            │
-  │    data, secret_path }      │                            │
+  │  { chain, to, value,        │                            │
+  │    data, signing_key_path } │                            │
   │ ─────────────────────────►  │                            │
   │                             │ 1. Decrypt private key     │
   │                             │    from vault via HSM      │
@@ -27,12 +27,12 @@ Agent                       1claw Vault                  Blockchain
   │                             │ 3. Broadcast via RPC  ───► │
   │                             │                            │
   │  ◄───────────────────────── │  tx_hash, status           │
-  │  { tx_id, tx_hash, status } │                            │
+  │  { id, tx_hash, status }    │                            │
 ```
 
 1. The agent calls `POST /v1/agents/:agent_id/transactions` with the chain, recipient, value, calldata, and the vault path to the signing key.
 2. The vault decrypts the private key inside the HSM boundary, constructs and signs the transaction, and broadcasts it to the chain's RPC endpoint.
-3. The agent receives a `tx_id` and `tx_hash` — it never sees the raw key material.
+3. The agent receives an `id` and `tx_hash` — it never sees the raw key material.
 
 ## Enabling the proxy
 
@@ -92,11 +92,11 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
   -H "Authorization: Bearer $AGENT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "chain_id": 1,
+    "chain": "ethereum",
     "to": "0xRecipientAddress",
-    "value": "1000000000000000000",
+    "value": "1.0",
     "data": "0x",
-    "secret_path": "wallets/hot-wallet"
+    "signing_key_path": "wallets/hot-wallet"
   }'
 ```
 
@@ -105,11 +105,11 @@ curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
 
 ```typescript
 const { data: tx } = await client.agents.submitTransaction(agentId, {
-  chain_id: 1,
+  chain: "ethereum",
   to: "0xRecipientAddress",
-  value: "1000000000000000000",
+  value: "1.0",
   data: "0x",
-  secret_path: "wallets/hot-wallet",
+  signing_key_path: "wallets/hot-wallet",
 });
 ```
 
@@ -120,10 +120,10 @@ const { data: tx } = await client.agents.submitTransaction(agentId, {
 
 ```json
 {
-    "tx_id": "a7e2c...",
+    "id": "a7e2c...",
     "tx_hash": "0xabc123...",
-    "chain_id": 1,
-    "status": "submitted"
+    "chain": "ethereum",
+    "status": "broadcast"
 }
 ```
 
@@ -498,6 +498,36 @@ When a transaction violates any guardrail, the proxy returns **403 Forbidden** w
 - **Policy enforcement** — the agent still needs a policy granting access to the vault path that holds the signing key. The proxy doesn't bypass access control.
 - **Transaction guardrails** — per-agent chain allowlists, recipient allowlists, per-tx caps, and daily spend limits enforced server-side before signing.
 - **Rate limiting** — standard rate limits apply to transaction endpoints.
+
+## Replay protection
+
+### Idempotency-Key header
+
+Submit an `Idempotency-Key` header (e.g. a UUID) with `POST /v1/agents/:id/transactions` to prevent duplicate submissions. If the same key is sent within 24 hours, the server returns the cached transaction response instead of signing and broadcasting again.
+
+The SDK and MCP server auto-generate an idempotency key on every `submitTransaction` call. You can override with your own key for explicit retry control.
+
+| Scenario | Response |
+| --- | --- |
+| First request with key | `201 Created` (normal flow) |
+| Duplicate request (completed) | `200 OK` (cached response) |
+| Duplicate request (in progress) | `409 Conflict` (retry later) |
+| No header | No idempotency enforcement |
+
+### Server-side nonce management
+
+When the `nonce` field is omitted, the server atomically reserves the next nonce per agent+chain+address combination. This prevents nonce collisions when multiple transactions are submitted concurrently. The server tracks the highest nonce used and takes the maximum of its tracked value and the on-chain pending nonce.
+
+### Response field gating
+
+By default, the `signed_tx` field (raw signed transaction hex) is **omitted** from GET responses to reduce exfiltration risk. Pass `?include_signed_tx=true` to include it:
+
+```bash
+curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions?include_signed_tx=true" \
+  -H "Authorization: Bearer $AGENT_TOKEN"
+```
+
+The initial POST submission always returns `signed_tx` for the originating caller.
 
 ## Best practices
 
