@@ -3,6 +3,7 @@
   "outputDirectory": "build",
   "installCommand": "pnpm install",
   "framework": null,
+  "cleanUrls": true,
   "rewrites": [
     { "source": "/llms.txt", "destination": "/llms.txt" },
     { "source": "/llms-full.txt", "destination": "/llms-full.txt" }

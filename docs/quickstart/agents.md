@@ -1,6 +1,6 @@
 ---
 title: Quickstart for agents
-description: Exchange an agent API key for a JWT, then list and fetch secrets the agent is allowed to access.
+description: Enroll (if needed), exchange an agent API key for a JWT, then list and fetch secrets the agent is allowed to access.
 sidebar_position: 1
 ---
 
@@ -9,7 +9,48 @@ import TabItem from '@theme/TabItem';
 
 # Quickstart for agents
 
-An **agent** is registered by a human; when registered, it receives an **API key** (`ocv_...`). The agent (or its runtime) exchanges this key for a short-lived JWT, then calls the same API to list and fetch secrets. Access is enforced by **policies** created by the human.
+An **agent** gets access by either (1) being **registered by a human** in the dashboard, or (2) **self-enrolling** with the email of a human who already has a 1Claw account. Once the agent has an **API key** (`ocv_...`), it exchanges that for a short-lived JWT and calls the same API to list and fetch secrets. Access is enforced by **policies** created by the human.
+
+## 0. Enroll (if you don't have credentials yet)
+
+If no one has assigned you an agent yet, you can **self-enroll**. You need the **email address of a human** who already has a 1Claw account. The API creates an agent in their organization and **emails the credentials** (Agent ID + API key) to that person — the key is never returned in the API response. That human can then grant the agent access to vaults via policies and share the credentials with you (or your deployment).
+
+**No authentication is required** for this endpoint.
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -s -X POST https://api.1claw.xyz/v1/agents/enroll \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-agent","human_email":"human@example.com"}'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const res = await fetch("https://api.1claw.xyz/v1/agents/enroll", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "my-agent",
+    human_email: "human@example.com",
+    description: "Optional description",
+  }),
+});
+const data = await res.json();
+// data.agent_id is set only when the email matched a user; credentials are emailed to the human
+```
+
+</TabItem>
+</Tabs>
+
+**Request body:** `name` (required), `human_email` (required), `description` (optional).
+
+**Response (201):** Same shape whether the email exists or not (to prevent email enumeration). When the email matches a 1Claw user, an agent is created and credentials are sent to that email. The human then adds policies in the [dashboard](https://1claw.xyz) and can give you the Agent ID and API key so you can continue with the steps below.
+
+**Rate limits:** Per-email cooldown (one enrollment per email per 10 minutes) and IP rate limiting apply.
 
 ## 1. Get an agent token
 
@@ -126,5 +167,5 @@ If the agent has no read permission for that path, or the secret is expired/dele
 ## Next steps
 
 - [Agent API overview](/docs/agent-api/overview) — Auth and endpoints in one place.
-- [Give an agent access](/docs/guides/give-agent-access) — How a human registers an agent and creates a policy.
+- [Give an agent access](/docs/guides/give-agent-access) — How a human registers an agent and creates a policy (or, after self-enrollment, how they grant the new agent access to vaults).
 - [Fetch secret](/docs/agent-api/fetch-secret) — Full request/response and errors.

@@ -1160,546 +1160,18 @@ This flow does not require typing your password in the terminal.
 
 ---
 
-## Intents API
+## This guide has been renamed
 
 ---
-title: Intents API
-description: Let agents sign and broadcast blockchain transactions without ever seeing private keys. Includes the full list of supported chains.
+title: Crypto Transaction Proxy (moved)
 sidebar_position: 3
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+# This guide has been renamed
 
-# Intents API
+The **Crypto Transaction Proxy** is now called the **Intents API**.
 
-The Intents API lets an agent submit on-chain transactions — transfers, swaps, contract calls — while **never having access to the raw private key**. The server signs the transaction using keys stored in the vault and broadcasts it through a dedicated RPC for the target chain.
-
-## How it works
-
-```
-Agent                       1claw Vault                  Blockchain
-  │                             │                            │
-  │  POST /v1/agents/:id/       │                            │
-  │    transactions             │                            │
-  │  { chain, to, value,        │                            │
-  │    data, signing_key_path } │                            │
-  │ ─────────────────────────►  │                            │
-  │                             │ 1. Decrypt private key     │
-  │                             │    from vault via HSM      │
-  │                             │ 2. Build & sign tx         │
-  │                             │ 3. Broadcast via RPC  ───► │
-  │                             │                            │
-  │  ◄───────────────────────── │  tx_hash, status           │
-  │  { id, tx_hash, status }    │                            │
-```
-
-1. The agent calls `POST /v1/agents/:agent_id/transactions` with the chain, recipient, value, calldata, and the vault path to the signing key.
-2. The vault decrypts the private key inside the HSM boundary, constructs and signs the transaction, and broadcasts it to the chain's RPC endpoint.
-3. The agent receives an `id` and `tx_hash` — it never sees the raw key material.
-
-## Enabling the proxy
-
-Set `intents_api_enabled: true` when registering or updating an agent:
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X POST "https://api.1claw.xyz/v1/agents" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "DeFi Bot",
-    "intents_api_enabled": true
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-import { createClient } from "@1claw/sdk";
-
-const client = createClient({
-  baseUrl: "https://api.1claw.xyz",
-  apiKey: process.env.ONECLAW_API_KEY,
-});
-
-const { data } = await client.agents.create({
-  name: "DeFi Bot",
-  intents_api_enabled: true,
-});
-```
-
-</TabItem>
-</Tabs>
-
-### What changes when enabled
-
-| Behaviour                        | `intents_api_enabled: false` | `intents_api_enabled: true` |
-| -------------------------------- | ----------------------------- | ---------------------------- |
-| Read `api_key`, `password`, etc. | Allowed                       | Allowed                      |
-| Read `private_key` or `ssh_key`  | Allowed                       | **Blocked (403)**            |
-| Submit proxy transactions        | Not available                 | Allowed                      |
-| Audit trail per transaction      | N/A                           | Full trace with `tx_id`      |
-
-The enforcement is two-sided: the flag both **grants** access to the transaction endpoints and **blocks** direct reads of signing keys through the standard secrets endpoint. This guarantees the agent can only use keys through the proxy.
-
-## Submitting a transaction
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
-  -H "Authorization: Bearer $AGENT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chain": "ethereum",
-    "to": "0xRecipientAddress",
-    "value": "1.0",
-    "data": "0x",
-    "signing_key_path": "wallets/hot-wallet"
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const { data: tx } = await client.agents.submitTransaction(agentId, {
-  chain: "ethereum",
-  to: "0xRecipientAddress",
-  value: "1.0",
-  data: "0x",
-  signing_key_path: "wallets/hot-wallet",
-});
-```
-
-</TabItem>
-</Tabs>
-
-### Response
-
-```json
-{
-    "id": "a7e2c...",
-    "tx_hash": "0xabc123...",
-    "chain": "ethereum",
-    "status": "broadcast"
-}
-```
-
-## Querying transactions
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-# List all transactions for this agent
-curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
-  -H "Authorization: Bearer $AGENT_TOKEN"
-
-# Get a specific transaction
-curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/$TX_ID" \
-  -H "Authorization: Bearer $AGENT_TOKEN"
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-// List transactions
-const { data: txList } = await client.agents.listTransactions(agentId);
-
-// Get transaction
-const { data: tx } = await client.agents.getTransaction(agentId, txId);
-```
-
-</TabItem>
-</Tabs>
-
-## Transaction simulation (Tenderly) {#simulation}
-
-Every transaction can be simulated before signing. Simulation executes the full transaction against the current chain state in a sandboxed environment, returning decoded traces, balance changes, gas estimates, and human-readable error messages — without consuming real gas.
-
-### Standalone simulation
-
-Call the simulate endpoint to preview a transaction without committing:
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate" \
-  -H "Authorization: Bearer $AGENT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chain": "base",
-    "to": "0xRecipientAddress",
-    "value": "0.5",
-    "data": "0x",
-    "signing_key_path": "wallets/hot-wallet"
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const { data: sim } = await client.agents.simulateTransaction(agentId, {
-  chain: "base",
-  to: "0xRecipientAddress",
-  value: "0.5",
-  data: "0x",
-  signing_key_path: "wallets/hot-wallet",
-});
-```
-
-</TabItem>
-</Tabs>
-
-The response includes:
-
-```json
-{
-  "simulation_id": "sim_a7e2c...",
-  "status": "success",
-  "gas_used": 21000,
-  "balance_changes": [
-    { "address": "0xSender...", "token": "ETH", "before": "2.5", "after": "1.99", "change": "-0.51" },
-    { "address": "0xRecipient...", "token": "ETH", "before": "0.0", "after": "0.5", "change": "+0.5" }
-  ],
-  "tenderly_dashboard_url": "https://dashboard.tenderly.co/..."
-}
-```
-
-### Simulate-then-sign (single call)
-
-Add `"simulate_first": true` to the standard transaction submission. The server simulates first; if the simulation reverts, it returns HTTP 422 and does **not** sign or broadcast:
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
-  -H "Authorization: Bearer $AGENT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chain": "base",
-    "to": "0xRecipientAddress",
-    "value": "0.5",
-    "simulate_first": true
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const { data: tx } = await client.agents.submitTransaction(agentId, {
-  chain: "base",
-  to: "0xRecipientAddress",
-  value: "0.5",
-  simulate_first: true,
-});
-```
-
-</TabItem>
-</Tabs>
-
-### Bundle simulation
-
-Simulate multiple transactions sequentially (e.g. ERC-20 approve followed by a swap):
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate-bundle" \
-  -H "Authorization: Bearer $AGENT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transactions": [
-      { "chain": "base", "to": "0xToken", "value": "0", "data": "0xapprove..." },
-      { "chain": "base", "to": "0xRouter", "value": "0", "data": "0xswap..." }
-    ]
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const { data: bundle } = await client.agents.simulateBundle(agentId, {
-  transactions: [
-    { chain: "base", to: "0xToken", value: "0", data: "0xapprove..." },
-    { chain: "base", to: "0xRouter", value: "0", data: "0xswap..." },
-  ],
-});
-```
-
-</TabItem>
-</Tabs>
-
-### Enforcing simulation
-
-Org admins can require simulation for all agent transactions by setting the `intents_api.require_simulation` org setting to `"true"` via `PUT /v1/admin/settings/intents_api.require_simulation`. When enabled, any transaction submitted without `simulate_first: true` will be automatically simulated, and reverts will block signing.
-
-### EIP-1559 (Type 2) transactions
-
-Set `max_fee_per_gas` and `max_priority_fee_per_gas` instead of `gas_price` to use EIP-1559 fee mode:
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
-  -H "Authorization: Bearer $AGENT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chain": "base",
-    "to": "0xRecipientAddress",
-    "value": "0.1",
-    "max_fee_per_gas": "30000000000",
-    "max_priority_fee_per_gas": "1500000000",
-    "simulate_first": true
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const { data: tx } = await client.agents.submitTransaction(agentId, {
-  chain: "base",
-  to: "0xRecipientAddress",
-  value: "0.1",
-  max_fee_per_gas: "30000000000",
-  max_priority_fee_per_gas: "1500000000",
-  simulate_first: true,
-});
-```
-
-</TabItem>
-</Tabs>
-
-## MCP tools
-
-The MCP server provides two transaction tools:
-
-**`simulate_transaction`** — simulate without signing:
-```
-Tool: simulate_transaction
-Args:
-  chain: "base"
-  to: "0xRecipientAddress"
-  value: "0.5"
-  signing_key_path: "wallets/hot-wallet"
-```
-
-**`submit_transaction`** — sign and broadcast (simulation on by default):
-```
-Tool: submit_transaction
-Args:
-  chain: "base"
-  to: "0xRecipientAddress"
-  value: "0.5"
-  signing_key_path: "wallets/hot-wallet"
-  simulate_first: true
-```
-
----
-
-## Supported chains {#supported-chains}
-
-The proxy can broadcast transactions to any chain in the registry. All mainnet chains below are configured with dedicated dRPC endpoints for reliable transaction delivery.
-
-:::tip Querying chains via API
-You can always fetch the live list with `GET /v1/chains`. The response includes `chain_id`, `rpc_url`, `explorer_url`, and `native_currency` for every chain.
-:::
-
-### Mainnet chains (28)
-
-| Chain             | Chain ID | Native token | Explorer                                                           |
-| ----------------- | -------- | ------------ | ------------------------------------------------------------------ |
-| Ethereum          | 1        | ETH          | [etherscan.io](https://etherscan.io)                               |
-| Optimism          | 10       | ETH          | [optimistic.etherscan.io](https://optimistic.etherscan.io)         |
-| Cronos            | 25       | CRO          | [cronoscan.com](https://cronoscan.com)                             |
-| BNB Smart Chain   | 56       | BNB          | [bscscan.com](https://bscscan.com)                                 |
-| Gnosis            | 100      | xDAI         | [gnosisscan.io](https://gnosisscan.io)                             |
-| Polygon           | 137      | POL          | [polygonscan.com](https://polygonscan.com)                         |
-| Sonic             | 146      | S            | [sonicscan.org](https://sonicscan.org)                             |
-| Fantom            | 250      | FTM          | [ftmscan.com](https://ftmscan.com)                                 |
-| zkSync Era        | 324      | ETH          | [explorer.zksync.io](https://explorer.zksync.io)                   |
-| World Chain       | 480      | ETH          | [worldscan.org](https://worldscan.org)                             |
-| Metis             | 1088     | METIS        | [andromeda-explorer.metis.io](https://andromeda-explorer.metis.io) |
-| Polygon zkEVM     | 1101     | ETH          | [zkevm.polygonscan.com](https://zkevm.polygonscan.com)             |
-| Moonbeam          | 1284     | GLMR         | [moonscan.io](https://moonscan.io)                                 |
-| Sei               | 1329     | SEI          | [seitrace.com](https://seitrace.com)                               |
-| Mantle            | 5000     | MNT          | [mantlescan.xyz](https://mantlescan.xyz)                           |
-| Kaia              | 8217     | KAIA         | [kaiascan.io](https://kaiascan.io)                                 |
-| Base              | 8453     | ETH          | [basescan.org](https://basescan.org)                               |
-| Mode              | 34443    | ETH          | [modescan.io](https://modescan.io)                                 |
-| Arbitrum One      | 42161    | ETH          | [arbiscan.io](https://arbiscan.io)                                 |
-| Arbitrum Nova     | 42170    | ETH          | [nova.arbiscan.io](https://nova.arbiscan.io)                       |
-| Celo              | 42220    | CELO         | [celoscan.io](https://celoscan.io)                                 |
-| Avalanche C-Chain | 43114    | AVAX         | [snowtrace.io](https://snowtrace.io)                               |
-| Linea             | 59144    | ETH          | [lineascan.build](https://lineascan.build)                         |
-| Berachain         | 80094    | BERA         | [berascan.com](https://berascan.com)                               |
-| Blast             | 81457    | ETH          | [blastscan.io](https://blastscan.io)                               |
-| Taiko             | 167000   | ETH          | [taikoscan.io](https://taikoscan.io)                               |
-| Scroll            | 534352   | ETH          | [scrollscan.com](https://scrollscan.com)                           |
-| Zora              | 7777777  | ETH          | [explorer.zora.energy](https://explorer.zora.energy)               |
-
-### Testnet chains
-
-| Chain        | Chain ID | Native token |
-| ------------ | -------- | ------------ |
-| Sepolia      | 11155111 | ETH          |
-| Base Sepolia | 84532    | ETH          |
-
-### Adding a chain
-
-Admins can add new chains via the admin API:
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X POST "https://api.1claw.xyz/v1/admin/chains" \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "my-chain",
-    "display_name": "My Chain",
-    "chain_id": 12345,
-    "rpc_url": "https://rpc.mychain.io",
-    "explorer_url": "https://explorer.mychain.io",
-    "native_currency": "MCH"
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-// Admin chain management requires direct API calls
-const response = await fetch("https://api.1claw.xyz/v1/admin/chains", {
-  method: "POST",
-  headers: {
-    "Authorization": `Bearer ${adminToken}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    name: "my-chain",
-    display_name: "My Chain",
-    chain_id: 12345,
-    rpc_url: "https://rpc.mychain.io",
-    explorer_url: "https://explorer.mychain.io",
-    native_currency: "MCH",
-  }),
-});
-```
-
-</TabItem>
-</Tabs>
-
-See the [Admin API reference](/docs/reference/api-reference#admin) for update and delete endpoints.
-
----
-
-## Transaction guardrails
-
-Per-agent controls can be set when registering or updating an agent to limit what transactions the proxy will sign:
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `tx_allowed_chains` | `string[]` | Restrict to specific chain names (e.g. `["ethereum", "base"]`). Empty = all chains allowed. |
-| `tx_to_allowlist` | `string[]` | Restrict recipient addresses. Empty = any address allowed. |
-| `tx_max_value_eth` | `string` | Maximum value per transaction in ETH (e.g. `"1.0"`). Null = no per-tx limit. |
-| `tx_daily_limit_eth` | `string` | Rolling 24-hour spend limit in ETH. Null = no daily limit. |
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
-
-```bash
-curl -X PATCH "https://api.1claw.xyz/v1/agents/$AGENT_ID" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tx_allowed_chains": ["ethereum", "base"],
-    "tx_to_allowlist": ["0xSafeAddress1", "0xSafeAddress2"],
-    "tx_max_value_eth": "0.5",
-    "tx_daily_limit_eth": "5.0"
-  }'
-```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const { data: agent } = await client.agents.update(agentId, {
-  tx_allowed_chains: ["ethereum", "base"],
-  tx_to_allowlist: ["0xSafeAddress1", "0xSafeAddress2"],
-  tx_max_value_eth: "0.5",
-  tx_daily_limit_eth: "5.0",
-});
-```
-
-</TabItem>
-</Tabs>
-
-When a transaction violates any guardrail, the proxy returns **403 Forbidden** with a descriptive `detail` message.
-
----
-
-## Security model
-
-- **Keys never leave the HSM boundary** — the vault decrypts the key, signs the transaction, and zeroes the memory. The plaintext key is never returned to the caller.
-- **Full audit trail** — every transaction is logged with the agent ID, chain, recipient, value, and resulting `tx_hash`.
-- **Policy enforcement** — the agent still needs a policy granting access to the vault path that holds the signing key. The proxy doesn't bypass access control.
-- **Transaction guardrails** — per-agent chain allowlists, recipient allowlists, per-tx caps, and daily spend limits enforced server-side before signing.
-- **Rate limiting** — standard rate limits apply to transaction endpoints.
-
-## Replay protection
-
-### Idempotency-Key header
-
-Submit an `Idempotency-Key` header (e.g. a UUID) with `POST /v1/agents/:id/transactions` to prevent duplicate submissions. If the same key is sent within 24 hours, the server returns the cached transaction response instead of signing and broadcasting again.
-
-The SDK and MCP server auto-generate an idempotency key on every `submitTransaction` call. You can override with your own key for explicit retry control.
-
-| Scenario | Response |
-| --- | --- |
-| First request with key | `201 Created` (normal flow) |
-| Duplicate request (completed) | `200 OK` (cached response) |
-| Duplicate request (in progress) | `409 Conflict` (retry later) |
-| No header | No idempotency enforcement |
-
-### Server-side nonce management
-
-When the `nonce` field is omitted, the server atomically reserves the next nonce per agent+chain+address combination. This prevents nonce collisions when multiple transactions are submitted concurrently. The server tracks the highest nonce used and takes the maximum of its tracked value and the on-chain pending nonce.
-
-### Response field gating
-
-By default, the `signed_tx` field (raw signed transaction hex) is **omitted** from GET responses to reduce exfiltration risk. Pass `?include_signed_tx=true` to include it:
-
-```bash
-curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions?include_signed_tx=true" \
-  -H "Authorization: Bearer $AGENT_TOKEN"
-```
-
-The initial POST submission always returns `signed_tx` for the originating caller.
-
-## Best practices
-
-1. **One key per agent** — give each agent its own signing key in its own vault path so you can revoke independently.
-2. **Set `expires_at`** — register agents with an expiry so leaked API keys have a bounded blast radius.
-3. **Use scoped policies** — grant the agent access only to the specific vault path containing its signing key, not the entire vault.
-4. **Monitor transactions** — query `GET /v1/agents/:id/transactions` regularly or set up audit webhooks.
-5. **Use testnets first** — store a testnet key (Sepolia, Base Sepolia) and verify the flow before moving to mainnet.
+See **[Intents API](/docs/guides/intents-api)** for the full guide: agent setup, transaction submission, simulation, guardrails, and supported chains.
 
 
 ---
@@ -2265,6 +1737,550 @@ To revoke: delete the policy or deactivate the agent. To rotate: create a new se
 
 ---
 
+## Intents API
+
+---
+title: Intents API
+description: Let agents sign and broadcast blockchain transactions without ever seeing private keys. Includes the full list of supported chains.
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Intents API
+
+The Intents API lets an agent submit on-chain transactions — transfers, swaps, contract calls — while **never having access to the raw private key**. The server signs the transaction using keys stored in the vault and broadcasts it through a dedicated RPC for the target chain.
+
+## How it works
+
+```
+Agent                       1claw Vault                  Blockchain
+  │                             │                            │
+  │  POST /v1/agents/:id/       │                            │
+  │    transactions             │                            │
+  │  { chain, to, value,        │                            │
+  │    data, signing_key_path } │                            │
+  │ ─────────────────────────►  │                            │
+  │                             │ 1. Decrypt private key     │
+  │                             │    from vault via HSM      │
+  │                             │ 2. Build & sign tx         │
+  │                             │ 3. Broadcast via RPC  ───► │
+  │                             │                            │
+  │  ◄───────────────────────── │  tx_hash, status           │
+  │  { id, tx_hash, status }    │                            │
+```
+
+1. The agent calls `POST /v1/agents/:agent_id/transactions` with the chain, recipient, value, calldata, and the vault path to the signing key.
+2. The vault decrypts the private key inside the HSM boundary, constructs and signs the transaction, and broadcasts it to the chain's RPC endpoint.
+3. The agent receives an `id` and `tx_hash` — it never sees the raw key material.
+
+## Enabling the Intents API
+
+Set `intents_api_enabled: true` when registering or updating an agent:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "DeFi Bot",
+    "intents_api_enabled": true
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+import { createClient } from "@1claw/sdk";
+
+const client = createClient({
+  baseUrl: "https://api.1claw.xyz",
+  apiKey: process.env.ONECLAW_API_KEY,
+});
+
+const { data } = await client.agents.create({
+  name: "DeFi Bot",
+  intents_api_enabled: true,
+});
+```
+
+</TabItem>
+</Tabs>
+
+### What changes when enabled
+
+| Behaviour                        | `intents_api_enabled: false` | `intents_api_enabled: true` |
+| -------------------------------- | ----------------------------- | ---------------------------- |
+| Read `api_key`, `password`, etc. | Allowed                       | Allowed                      |
+| Read `private_key` or `ssh_key`  | Allowed                       | **Blocked (403)**            |
+| Submit proxy transactions        | Not available                 | Allowed                      |
+| Audit trail per transaction      | N/A                           | Full trace with `tx_id`      |
+
+The enforcement is two-sided: the flag both **grants** access to the transaction endpoints and **blocks** direct reads of signing keys through the standard secrets endpoint. This guarantees the agent can only use keys through the proxy.
+
+## Submitting a transaction
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "ethereum",
+    "to": "0xRecipientAddress",
+    "value": "1.0",
+    "data": "0x",
+    "signing_key_path": "wallets/hot-wallet"
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: tx } = await client.agents.submitTransaction(agentId, {
+  chain: "ethereum",
+  to: "0xRecipientAddress",
+  value: "1.0",
+  data: "0x",
+  signing_key_path: "wallets/hot-wallet",
+});
+```
+
+</TabItem>
+</Tabs>
+
+### Response
+
+```json
+{
+    "id": "a7e2c...",
+    "tx_hash": "0xabc123...",
+    "chain": "ethereum",
+    "status": "broadcast"
+}
+```
+
+## Querying transactions
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+# List all transactions for this agent
+curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN"
+
+# Get a specific transaction
+curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/$TX_ID" \
+  -H "Authorization: Bearer $AGENT_TOKEN"
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+// List transactions
+const { data: txList } = await client.agents.listTransactions(agentId);
+
+// Get transaction
+const { data: tx } = await client.agents.getTransaction(agentId, txId);
+```
+
+</TabItem>
+</Tabs>
+
+## Transaction simulation (Tenderly) {#simulation}
+
+Every transaction can be simulated before signing. Simulation executes the full transaction against the current chain state in a sandboxed environment, returning decoded traces, balance changes, gas estimates, and human-readable error messages — without consuming real gas.
+
+### Standalone simulation
+
+Call the simulate endpoint to preview a transaction without committing:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.5",
+    "data": "0x",
+    "signing_key_path": "wallets/hot-wallet"
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: sim } = await client.agents.simulateTransaction(agentId, {
+  chain: "base",
+  to: "0xRecipientAddress",
+  value: "0.5",
+  data: "0x",
+  signing_key_path: "wallets/hot-wallet",
+});
+```
+
+</TabItem>
+</Tabs>
+
+The response includes:
+
+```json
+{
+  "simulation_id": "sim_a7e2c...",
+  "status": "success",
+  "gas_used": 21000,
+  "balance_changes": [
+    { "address": "0xSender...", "token": "ETH", "before": "2.5", "after": "1.99", "change": "-0.51" },
+    { "address": "0xRecipient...", "token": "ETH", "before": "0.0", "after": "0.5", "change": "+0.5" }
+  ],
+  "tenderly_dashboard_url": "https://dashboard.tenderly.co/..."
+}
+```
+
+### Simulate-then-sign (single call)
+
+Add `"simulate_first": true` to the standard transaction submission. The server simulates first; if the simulation reverts, it returns HTTP 422 and does **not** sign or broadcast:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.5",
+    "simulate_first": true
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: tx } = await client.agents.submitTransaction(agentId, {
+  chain: "base",
+  to: "0xRecipientAddress",
+  value: "0.5",
+  simulate_first: true,
+});
+```
+
+</TabItem>
+</Tabs>
+
+### Bundle simulation
+
+Simulate multiple transactions sequentially (e.g. ERC-20 approve followed by a swap):
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions/simulate-bundle" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transactions": [
+      { "chain": "base", "to": "0xToken", "value": "0", "data": "0xapprove..." },
+      { "chain": "base", "to": "0xRouter", "value": "0", "data": "0xswap..." }
+    ]
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: bundle } = await client.agents.simulateBundle(agentId, {
+  transactions: [
+    { chain: "base", to: "0xToken", value: "0", data: "0xapprove..." },
+    { chain: "base", to: "0xRouter", value: "0", data: "0xswap..." },
+  ],
+});
+```
+
+</TabItem>
+</Tabs>
+
+### Enforcing simulation
+
+Org admins can require simulation for all agent transactions by setting the `intents_api.require_simulation` org setting to `"true"` via `PUT /v1/admin/settings/intents_api.require_simulation`. When enabled, any transaction submitted without `simulate_first: true` will be automatically simulated, and reverts will block signing.
+
+### EIP-1559 (Type 2) transactions
+
+Set `max_fee_per_gas` and `max_priority_fee_per_gas` instead of `gas_price` to use EIP-1559 fee mode:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "to": "0xRecipientAddress",
+    "value": "0.1",
+    "max_fee_per_gas": "30000000000",
+    "max_priority_fee_per_gas": "1500000000",
+    "simulate_first": true
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: tx } = await client.agents.submitTransaction(agentId, {
+  chain: "base",
+  to: "0xRecipientAddress",
+  value: "0.1",
+  max_fee_per_gas: "30000000000",
+  max_priority_fee_per_gas: "1500000000",
+  simulate_first: true,
+});
+```
+
+</TabItem>
+</Tabs>
+
+## MCP tools
+
+The MCP server provides two transaction tools:
+
+**`simulate_transaction`** — simulate without signing:
+```
+Tool: simulate_transaction
+Args:
+  chain: "base"
+  to: "0xRecipientAddress"
+  value: "0.5"
+  signing_key_path: "wallets/hot-wallet"
+```
+
+**`submit_transaction`** — sign and broadcast (simulation on by default):
+```
+Tool: submit_transaction
+Args:
+  chain: "base"
+  to: "0xRecipientAddress"
+  value: "0.5"
+  signing_key_path: "wallets/hot-wallet"
+  simulate_first: true
+```
+
+---
+
+## Supported chains {#supported-chains}
+
+The proxy can broadcast transactions to any chain in the registry. All mainnet chains below are configured with dedicated dRPC endpoints for reliable transaction delivery.
+
+:::tip Querying chains via API
+You can always fetch the live list with `GET /v1/chains`. The response includes `chain_id`, `rpc_url`, `explorer_url`, and `native_currency` for every chain.
+:::
+
+### Mainnet chains (28)
+
+| Chain             | Chain ID | Native token | Explorer                                                           |
+| ----------------- | -------- | ------------ | ------------------------------------------------------------------ |
+| Ethereum          | 1        | ETH          | [etherscan.io](https://etherscan.io)                               |
+| Optimism          | 10       | ETH          | [optimistic.etherscan.io](https://optimistic.etherscan.io)         |
+| Cronos            | 25       | CRO          | [cronoscan.com](https://cronoscan.com)                             |
+| BNB Smart Chain   | 56       | BNB          | [bscscan.com](https://bscscan.com)                                 |
+| Gnosis            | 100      | xDAI         | [gnosisscan.io](https://gnosisscan.io)                             |
+| Polygon           | 137      | POL          | [polygonscan.com](https://polygonscan.com)                         |
+| Sonic             | 146      | S            | [sonicscan.org](https://sonicscan.org)                             |
+| Fantom            | 250      | FTM          | [ftmscan.com](https://ftmscan.com)                                 |
+| zkSync Era        | 324      | ETH          | [explorer.zksync.io](https://explorer.zksync.io)                   |
+| World Chain       | 480      | ETH          | [worldscan.org](https://worldscan.org)                             |
+| Metis             | 1088     | METIS        | [andromeda-explorer.metis.io](https://andromeda-explorer.metis.io) |
+| Polygon zkEVM     | 1101     | ETH          | [zkevm.polygonscan.com](https://zkevm.polygonscan.com)             |
+| Moonbeam          | 1284     | GLMR         | [moonscan.io](https://moonscan.io)                                 |
+| Sei               | 1329     | SEI          | [seitrace.com](https://seitrace.com)                               |
+| Mantle            | 5000     | MNT          | [mantlescan.xyz](https://mantlescan.xyz)                           |
+| Kaia              | 8217     | KAIA         | [kaiascan.io](https://kaiascan.io)                                 |
+| Base              | 8453     | ETH          | [basescan.org](https://basescan.org)                               |
+| Mode              | 34443    | ETH          | [modescan.io](https://modescan.io)                                 |
+| Arbitrum One      | 42161    | ETH          | [arbiscan.io](https://arbiscan.io)                                 |
+| Arbitrum Nova     | 42170    | ETH          | [nova.arbiscan.io](https://nova.arbiscan.io)                       |
+| Celo              | 42220    | CELO         | [celoscan.io](https://celoscan.io)                                 |
+| Avalanche C-Chain | 43114    | AVAX         | [snowtrace.io](https://snowtrace.io)                               |
+| Linea             | 59144    | ETH          | [lineascan.build](https://lineascan.build)                         |
+| Berachain         | 80094    | BERA         | [berascan.com](https://berascan.com)                               |
+| Blast             | 81457    | ETH          | [blastscan.io](https://blastscan.io)                               |
+| Taiko             | 167000   | ETH          | [taikoscan.io](https://taikoscan.io)                               |
+| Scroll            | 534352   | ETH          | [scrollscan.com](https://scrollscan.com)                           |
+| Zora              | 7777777  | ETH          | [explorer.zora.energy](https://explorer.zora.energy)               |
+
+### Testnet chains
+
+| Chain        | Chain ID | Native token |
+| ------------ | -------- | ------------ |
+| Sepolia      | 11155111 | ETH          |
+| Base Sepolia | 84532    | ETH          |
+
+### Adding a chain
+
+Admins can add new chains via the admin API:
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST "https://api.1claw.xyz/v1/admin/chains" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-chain",
+    "display_name": "My Chain",
+    "chain_id": 12345,
+    "rpc_url": "https://rpc.mychain.io",
+    "explorer_url": "https://explorer.mychain.io",
+    "native_currency": "MCH"
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+// Admin chain management requires direct API calls
+const response = await fetch("https://api.1claw.xyz/v1/admin/chains", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${adminToken}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    name: "my-chain",
+    display_name: "My Chain",
+    chain_id: 12345,
+    rpc_url: "https://rpc.mychain.io",
+    explorer_url: "https://explorer.mychain.io",
+    native_currency: "MCH",
+  }),
+});
+```
+
+</TabItem>
+</Tabs>
+
+See the [Admin API reference](/docs/reference/api-reference#admin) for update and delete endpoints.
+
+---
+
+## Transaction guardrails
+
+Per-agent controls can be set when registering or updating an agent to limit what transactions the proxy will sign:
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `tx_allowed_chains` | `string[]` | Restrict to specific chain names (e.g. `["ethereum", "base"]`). Empty = all chains allowed. |
+| `tx_to_allowlist` | `string[]` | Restrict recipient addresses. Empty = any address allowed. |
+| `tx_max_value_eth` | `string` | Maximum value per transaction in ETH (e.g. `"1.0"`). Null = no per-tx limit. |
+| `tx_daily_limit_eth` | `string` | Rolling 24-hour spend limit in ETH. Null = no daily limit. |
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X PATCH "https://api.1claw.xyz/v1/agents/$AGENT_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tx_allowed_chains": ["ethereum", "base"],
+    "tx_to_allowlist": ["0xSafeAddress1", "0xSafeAddress2"],
+    "tx_max_value_eth": "0.5",
+    "tx_daily_limit_eth": "5.0"
+  }'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const { data: agent } = await client.agents.update(agentId, {
+  tx_allowed_chains: ["ethereum", "base"],
+  tx_to_allowlist: ["0xSafeAddress1", "0xSafeAddress2"],
+  tx_max_value_eth: "0.5",
+  tx_daily_limit_eth: "5.0",
+});
+```
+
+</TabItem>
+</Tabs>
+
+When a transaction violates any guardrail, the proxy returns **403 Forbidden** with a descriptive `detail` message.
+
+---
+
+## Security model
+
+- **Keys never leave the HSM boundary** — the vault decrypts the key, signs the transaction, and zeroes the memory. The plaintext key is never returned to the caller.
+- **Full audit trail** — every transaction is logged with the agent ID, chain, recipient, value, and resulting `tx_hash`.
+- **Policy enforcement** — the agent still needs a policy granting access to the vault path that holds the signing key. The proxy doesn't bypass access control.
+- **Transaction guardrails** — per-agent chain allowlists, recipient allowlists, per-tx caps, and daily spend limits enforced server-side before signing.
+- **Rate limiting** — standard rate limits apply to transaction endpoints.
+
+## Replay protection
+
+### Idempotency-Key header
+
+Submit an `Idempotency-Key` header (e.g. a UUID) with `POST /v1/agents/:id/transactions` to prevent duplicate submissions. If the same key is sent within 24 hours, the server returns the cached transaction response instead of signing and broadcasting again.
+
+The SDK and MCP server auto-generate an idempotency key on every `submitTransaction` call. You can override with your own key for explicit retry control.
+
+| Scenario | Response |
+| --- | --- |
+| First request with key | `201 Created` (normal flow) |
+| Duplicate request (completed) | `200 OK` (cached response) |
+| Duplicate request (in progress) | `409 Conflict` (retry later) |
+| No header | No idempotency enforcement |
+
+### Server-side nonce management
+
+When the `nonce` field is omitted, the server atomically reserves the next nonce per agent+chain+address combination. This prevents nonce collisions when multiple transactions are submitted concurrently. The server tracks the highest nonce used and takes the maximum of its tracked value and the on-chain pending nonce.
+
+### Response field gating
+
+By default, the `signed_tx` field (raw signed transaction hex) is **omitted** from GET responses to reduce exfiltration risk. Pass `?include_signed_tx=true` to include it:
+
+```bash
+curl "https://api.1claw.xyz/v1/agents/$AGENT_ID/transactions?include_signed_tx=true" \
+  -H "Authorization: Bearer $AGENT_TOKEN"
+```
+
+The initial POST submission always returns `signed_tx` for the originating caller.
+
+## Best practices
+
+1. **One key per agent** — give each agent its own signing key in its own vault path so you can revoke independently.
+2. **Set `expires_at`** — register agents with an expiry so leaked API keys have a bounded blast radius.
+3. **Use scoped policies** — grant the agent access only to the specific vault path containing its signing key, not the entire vault.
+4. **Monitor transactions** — query `GET /v1/agents/:id/transactions` regularly or set up audit webhooks.
+5. **Use testnets first** — store a testnet key (Sepolia, Base Sepolia) and verify the flow before moving to mainnet.
+
+
+---
+
 ## MCP Integration
 
 ---
@@ -2393,7 +2409,25 @@ With the 1claw skill installed, your OpenClaw agent can:
 
 Secrets are encrypted in the vault and fetched just-in-time; they are not persisted in the conversation.
 
-## Prerequisites
+## Setup options
+
+There are two ways to connect your OpenClaw agent to 1Claw:
+
+### Option A: Self-enrollment (recommended)
+
+The agent can register itself. Run this from your deployment script or during `clawhub install`:
+
+```bash
+curl -s -X POST https://api.1claw.xyz/v1/agents/enroll \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-openclaw-agent","human_email":"you@example.com"}'
+```
+
+1Claw looks up your account by email, creates the agent, and **emails the credentials** (Agent ID + API key) to you. The API key is not returned in the response — only the human receives it.
+
+Once you get the email, configure the credentials in your OpenClaw environment (see [Configure credentials](#configure-credentials) below), then grant the agent access to a vault from the [dashboard](https://1claw.xyz/agents).
+
+### Option B: Manual registration
 
 1. **1Claw account** — Sign up at [1claw.xyz](https://1claw.xyz).
 2. **A vault** — Create a vault in the dashboard (or via API).
@@ -2416,8 +2450,8 @@ The 1claw skill expects these environment variables (or equivalent in your OpenC
 
 | Variable | Description |
 | -------- | ----------- |
-| `ONECLAW_AGENT_ID` | Your 1Claw agent's UUID (from the dashboard). |
-| `ONECLAW_AGENT_API_KEY` | The agent's API key (`ocv_...`). Created when you register the agent; rotate from the dashboard if needed. |
+| `ONECLAW_AGENT_ID` | Your 1Claw agent's UUID (from the enrollment email or dashboard). |
+| `ONECLAW_AGENT_API_KEY` | The agent's API key (`ocv_...`). Sent to the human's email during enrollment, or shown once during manual registration. |
 | `ONECLAW_VAULT_ID` | The vault UUID the agent will read from and write to. |
 
 Set them in your OpenClaw environment or in the config your gateway uses when running the 1claw MCP server (the skill uses the [1Claw MCP server](https://www.npmjs.com/package/@1claw/mcp) under the hood).
@@ -2428,6 +2462,7 @@ The 1claw skill teaches your agent how to call 1Claw's MCP tools (e.g. `list_sec
 
 - **MCP server** — The skill uses `@1claw/mcp`. You can run it as a local process (stdio) or use the hosted MCP at `https://mcp.1claw.xyz/mcp` if your OpenClaw setup supports remote MCP.
 - **Permissions** — The agent's 1Claw policies control what it can read and write. Restrict by path pattern (e.g. `prod/*` only) and use the dashboard to revoke or rotate access anytime.
+- **Sharing with your human** — The agent can share secrets back to the human who registered it using `recipient_type: "creator"` in the `share_secret` tool. The human will see the shared secret in their dashboard under Sharing → Inbound.
 
 ## Next steps
 
@@ -3204,7 +3239,7 @@ Store the `api_key` securely; it cannot be retrieved again. Use [Deactivate agen
 
 When `intents_api_enabled` is set to `true`:
 
-1. **Transaction proxy access** — The agent can call `POST /v1/agents/:id/transactions` to submit transactions that the signing proxy will broadcast using keys stored in the vault.
+1. **Intents API access** — The agent can call `POST /v1/agents/:id/transactions` to submit transactions that the signing proxy will broadcast using keys stored in the vault.
 
 2. **Private key reads blocked** — The agent is **blocked** from reading secrets of type `private_key` or `ssh_key` through the normal `GET /v1/vaults/:vault_id/secrets/:path` endpoint. Any attempt returns `403 Forbidden`.
 
@@ -4937,7 +4972,7 @@ Secret shared with agent abc123. Share ID: ef814...
 
 ---
 title: Quickstart for agents
-description: Exchange an agent API key for a JWT, then list and fetch secrets the agent is allowed to access.
+description: Enroll (if needed), exchange an agent API key for a JWT, then list and fetch secrets the agent is allowed to access.
 sidebar_position: 1
 ---
 
@@ -4946,7 +4981,48 @@ import TabItem from '@theme/TabItem';
 
 # Quickstart for agents
 
-An **agent** is registered by a human; when registered, it receives an **API key** (`ocv_...`). The agent (or its runtime) exchanges this key for a short-lived JWT, then calls the same API to list and fetch secrets. Access is enforced by **policies** created by the human.
+An **agent** gets access by either (1) being **registered by a human** in the dashboard, or (2) **self-enrolling** with the email of a human who already has a 1Claw account. Once the agent has an **API key** (`ocv_...`), it exchanges that for a short-lived JWT and calls the same API to list and fetch secrets. Access is enforced by **policies** created by the human.
+
+## 0. Enroll (if you don't have credentials yet)
+
+If no one has assigned you an agent yet, you can **self-enroll**. You need the **email address of a human** who already has a 1Claw account. The API creates an agent in their organization and **emails the credentials** (Agent ID + API key) to that person — the key is never returned in the API response. That human can then grant the agent access to vaults via policies and share the credentials with you (or your deployment).
+
+**No authentication is required** for this endpoint.
+
+<Tabs groupId="code-examples">
+<TabItem value="curl" label="curl">
+
+```bash
+curl -s -X POST https://api.1claw.xyz/v1/agents/enroll \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-agent","human_email":"human@example.com"}'
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const res = await fetch("https://api.1claw.xyz/v1/agents/enroll", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "my-agent",
+    human_email: "human@example.com",
+    description: "Optional description",
+  }),
+});
+const data = await res.json();
+// data.agent_id is set only when the email matched a user; credentials are emailed to the human
+```
+
+</TabItem>
+</Tabs>
+
+**Request body:** `name` (required), `human_email` (required), `description` (optional).
+
+**Response (201):** Same shape whether the email exists or not (to prevent email enumeration). When the email matches a 1Claw user, an agent is created and credentials are sent to that email. The human then adds policies in the [dashboard](https://1claw.xyz) and can give you the Agent ID and API key so you can continue with the steps below.
+
+**Rate limits:** Per-email cooldown (one enrollment per email per 10 minutes) and IP rate limiting apply.
 
 ## 1. Get an agent token
 
@@ -5063,7 +5139,7 @@ If the agent has no read permission for that path, or the secret is expired/dele
 ## Next steps
 
 - [Agent API overview](/docs/agent-api/overview) — Auth and endpoints in one place.
-- [Give an agent access](/docs/guides/give-agent-access) — How a human registers an agent and creates a policy.
+- [Give an agent access](/docs/guides/give-agent-access) — How a human registers an agent and creates a policy (or, after self-enrollment, how they grant the new agent access to vaults).
 - [Fetch secret](/docs/agent-api/fetch-secret) — Full request/response and errors.
 
 
@@ -6219,6 +6295,12 @@ All endpoints are under **/v1**.
 | PUT    | `/v1/vaults/:vault_id/policies/:policy_id` | Update policy |
 | DELETE | `/v1/vaults/:vault_id/policies/:policy_id` | Delete policy |
 
+## Agent Self-Enrollment (Public)
+
+| Method | Path               | Description                                                                |
+| ------ | ------------------ | -------------------------------------------------------------------------- |
+| POST   | `/v1/agents/enroll`| Self-enroll an agent; credentials emailed to human (no auth required)      |
+
 ## Agents
 
 | Method | Path                              | Description                                             |
@@ -6694,17 +6776,11 @@ description: Example curl commands for 1claw auth, vaults, secrets, and agents; 
 sidebar_position: 3
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # curl examples
 
 Base URL used: `https://api.1claw.xyz`. Replace with your Cloud Run URL if different.
 
 ## Human: get JWT
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
 
 ```bash
 curl -s -X POST https://api.1claw.xyz/v1/auth/token \
@@ -6713,22 +6789,7 @@ curl -s -X POST https://api.1claw.xyz/v1/auth/token \
 # Save access_token as $TOKEN
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-import { createClient } from "@1claw/sdk";
-const client = createClient({ baseUrl: "https://api.1claw.xyz" });
-await client.auth.login({ email: "you@example.com", password: "your-password" });
-```
-
-</TabItem>
-</Tabs>
-
 ## Human: create vault and secret
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
 
 ```bash
 export TOKEN="<access_token>"
@@ -6751,35 +6812,7 @@ curl -s "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const client = createClient({
-  baseUrl: "https://api.1claw.xyz",
-  apiKey: process.env.ONECLAW_API_KEY,
-});
-
-const { data: vault } = await client.vault.create({
-  name: "My Vault",
-  description: "Secrets",
-});
-
-await client.secrets.set(vault.id, "api-keys/openai", "sk-proj-...", {
-  type: "api_key",
-});
-
-const { data: secret } = await client.secrets.get(vault.id, "api-keys/openai");
-console.log(secret.value);
-```
-
-</TabItem>
-</Tabs>
-
 ## Agent: get JWT and read secret
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
 
 ```bash
 curl -s -X POST https://api.1claw.xyz/v1/auth/agent-token \
@@ -6793,46 +6826,23 @@ curl -s "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets/api-keys/openai" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+## Agent: self-enroll
 
-```typescript
-const agentClient = createClient({
-  baseUrl: "https://api.1claw.xyz",
-  agentId: "<uuid>",
-  apiKey: "ocv_...",
-});
-
-const { data: secret } = await agentClient.secrets.get(VAULT_ID, "api-keys/openai");
+```bash
+curl -s -X POST https://api.1claw.xyz/v1/agents/enroll \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-agent","human_email":"you@example.com"}'
+# Credentials are emailed to the human — not returned here
 ```
 
-</TabItem>
-</Tabs>
-
 ## List secrets (metadata only)
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
 
 ```bash
 curl -s "https://api.1claw.xyz/v1/vaults/$VAULT_ID/secrets" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-const { data } = await client.secrets.list(VAULT_ID);
-```
-
-</TabItem>
-</Tabs>
-
 ## Create policy (grant agent read)
-
-<Tabs groupId="code-examples">
-<TabItem value="curl" label="curl">
 
 ```bash
 curl -s -X POST "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies" \
@@ -6845,21 +6855,6 @@ curl -s -X POST "https://api.1claw.xyz/v1/vaults/$VAULT_ID/policies" \
     "permissions": ["read"]
   }'
 ```
-
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```typescript
-await client.access.grantAgent({
-  vault_id: VAULT_ID,
-  secret_path_pattern: "**",
-  principal_id: "<agent_uuid>",
-  permissions: ["read"],
-});
-```
-
-</TabItem>
-</Tabs>
 
 
 ---
