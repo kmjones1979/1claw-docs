@@ -491,6 +491,19 @@ When a transaction violates any guardrail, the proxy returns **403 Forbidden** w
 
 ---
 
+## Shroud TEE signing (optional)
+
+When [Shroud](/docs/guides/shroud) is deployed, transaction signing moves into a Trusted Execution Environment (AMD SEV-SNP on GKE). The `POST /v1/agents/:id/transactions` endpoint on `shroud.1claw.xyz` uses Shroud's own signing engine — private keys are only decrypted inside confidential memory. All other Intents API endpoints (list, get, simulate, simulate-bundle) are proxied to the Vault API.
+
+Both `api.1claw.xyz` and `shroud.1claw.xyz` serve the full Intents API. Choose based on your security requirements:
+
+| Surface | Submit | List/Get/Simulate | Key isolation |
+| --- | --- | --- | --- |
+| `api.1claw.xyz` | HSM-backed signing (Cloud Run) | Direct | Cloud KMS HSM |
+| `shroud.1claw.xyz` | TEE signing (GKE SEV-SNP) | Proxied to Vault API | TEE + KMS |
+
+Shroud also provides LLM proxy capabilities — see the [Shroud guide](/docs/guides/shroud).
+
 ## Security model
 
 - **Keys never leave the HSM boundary** — the vault decrypts the key, signs the transaction, and zeroes the memory. The plaintext key is never returned to the caller.
